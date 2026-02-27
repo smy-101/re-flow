@@ -15,10 +15,12 @@ context: |
   项目名称：re-flow
   技术栈：
     - 框架：Next.js 16（App Router）
-    - 语言：TypeScript 5（严格模式）
+    - 语言：TypeScript 5（严格模式，tsconfig.json strict: true）
     - UI：React 19 + Tailwind CSS 4
     - 包管理：pnpm
     - 代码规范：ESLint（eslint-config-next）
+    - 单元测试：Vitest + React Testing Library（测试文件放在 __tests__/ 或 *.test.ts(x) 旁置）
+    - 类型检查：pnpm exec tsc --noEmit（CI 强制通过，不允许 any 和 ts-ignore）
 
   目录约定：
     - app/          — Next.js App Router 页面与布局
@@ -61,4 +63,6 @@ rules:
   tasks:
     - 每个任务粒度不超过 2 小时
     - 任务格式：`- [ ] <动作动词> <目标文件或模块>`
-    - 按"基础设施 → 核心逻辑 → UI → 测试"顺序排列
+    - 按"基础设施 → 核心逻辑 → UI → 测试 → 类型检查"顺序排列
+    - 每个涉及业务逻辑或 UI 组件的 change 必须包含单元测试任务（Vitest + React Testing Library）
+    - 最后一个任务必须是：`- [ ] 运行 pnpm exec tsc --noEmit 确认零类型错误`
