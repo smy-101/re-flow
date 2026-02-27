@@ -1,0 +1,64 @@
+schema: spec-driven
+
+# =============================================================================
+# re-flow — OpenSpec 项目配置
+# 采用 SDD（Spec-Driven Development）模式：先规格后编码
+#
+# SDD 开发流程：
+#   1. /opsx:propose <change-name>  — 生成 proposal / specs / design / tasks
+#   2. /opsx:apply                  — 按 tasks 逐条实现代码
+#   3. /opsx:archive                — 归档已完成的 change，更新 specs
+# =============================================================================
+
+# 项目上下文（注入到每个 artifact 的 AI 提示中）
+context: |
+  项目名称：re-flow
+  技术栈：
+    - 框架：Next.js 16（App Router）
+    - 语言：TypeScript 5（严格模式）
+    - UI：React 19 + Tailwind CSS 4
+    - 包管理：pnpm
+    - 代码规范：ESLint（eslint-config-next）
+
+  目录约定：
+    - app/          — Next.js App Router 页面与布局
+    - components/   — 可复用 UI 组件（若存在）
+    - lib/          — 工具函数与业务逻辑（若存在）
+    - openspec/     — SDD 规格文件（不含业务代码）
+
+  提交规范：Conventional Commits（feat / fix / chore / docs / refactor）
+  样式规范：Tailwind CSS utility-first，避免自定义 CSS，优先使用 CSS 变量
+  组件规范：函数式组件 + React Hooks，禁止 class 组件
+
+  可用 Skills（开发过程中按场景调用）：
+    - vercel-react-best-practices
+        触发时机：编写/重构 React 组件、Next.js 页面、数据获取逻辑、Bundle 优化时
+        涵盖：消除瀑布请求、Bundle 体积、Server/Client 组件、重渲染优化、JS 性能等 57 条规则
+    - vercel-composition-patterns
+        触发时机：组件出现大量 boolean props、构建可复用组件库、设计组合式 API、代码审查组件架构时
+        涵盖：复合组件（Compound Components）、状态提升、Context 解耦、React 19 API 变更
+    - web-design-guidelines
+        触发时机：用户要求"review UI"/"检查可访问性"/"审查设计"/"检查 UX"时
+        用法：从 https://raw.githubusercontent.com/vercel-labs/web-interface-guidelines/main/command.md 获取最新规则后审查目标文件
+
+# 各 artifact 的专属规则（仅对匹配的 artifact 生效）
+rules:
+  proposal:
+    - 必须包含"背景与动机"和"非目标（Non-goals）"两节
+    - 说明对现有页面/组件/API 的影响范围
+    - 篇幅控制在 400 字以内，聚焦 What & Why，不涉及 How
+
+  specs:
+    - 使用 Given / When / Then 格式描述场景
+    - 每条需求以 "系统SHALL…" 开头（RFC 2119 风格）
+    - 优先引用已有模式，避免重复定义
+
+  design:
+    - 说明组件树或文件变更清单
+    - 标注需要新增的路由（app/ 路径）
+    - 若涉及数据获取，需说明是 Server Component 还是 Client Component
+
+  tasks:
+    - 每个任务粒度不超过 2 小时
+    - 任务格式：`- [ ] <动作动词> <目标文件或模块>`
+    - 按"基础设施 → 核心逻辑 → UI → 测试"顺序排列
