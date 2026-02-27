@@ -1,0 +1,15 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "id": "00000000-0000-0000-0000-000000000000",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1772160820827,
+      "tag": "0000_steep_the_anarchist",
+      "breakpoints": true
+    }
+  ]
+}
