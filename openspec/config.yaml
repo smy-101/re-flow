@@ -49,7 +49,6 @@ rules:
     - 必须包含"背景与动机"和"非目标（Non-goals）"两节
     - 说明对现有页面/组件/API 的影响范围
     - 篇幅控制在 400 字以内，聚焦 What & Why，不涉及 How
-    - /opsx:propose 完成后必须提交一次代码（git commit），作为实现前基线，便于后续对比与回滚
 
   specs:
     - 使用 Given / When / Then 格式描述场景

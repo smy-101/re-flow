@@ -69,9 +69,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 This project uses Spec-Driven Development via OpenSpec:
 
 1. `/opsx:propose <change-name>` - Generate proposal, specs, design, and tasks
-2. **After proposal: Commit code as baseline for comparison/rollback**
-3. `/opsx:apply` - Implement tasks sequentially
-4. `/opsx:archive` - Archive completed changes
+2. `/opsx:apply` - Implement tasks sequentially
+3. `/opsx:archive` - Archive completed changes
 
 Configuration: `openspec/config.yaml` defines project context and artifact rules.
 
