@@ -2,19 +2,24 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { getUserIdFromToken } from '@/lib/auth/jwt';
 
-// Define protected routes
-const protectedRoutes = ['/dashboard', '/profile'];
+// Define public routes that bypass authentication
+const publicRoutes = [
+  '/login',
+  '/register',
+  '/api/auth/login',
+  '/api/auth/register',
+];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Check if the route is protected
-  const isProtectedRoute = protectedRoutes.some((route) =>
+  // Check if the route is public
+  const isPublicRoute = publicRoutes.some((route) =>
     pathname.startsWith(route)
   );
 
-  // Skip middleware for public routes
-  if (!isProtectedRoute) {
+  // Allow public routes to proceed without authentication
+  if (isPublicRoute) {
     return NextResponse.next();
   }
 
@@ -49,6 +54,7 @@ export async function middleware(request: NextRequest) {
   });
 }
 
+// Match all routes including API routes
 export const config = {
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
 };
