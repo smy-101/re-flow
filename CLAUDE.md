@@ -16,7 +16,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Terminal 2: `pnpm worker:rss` - Run RSS worker (optional, for auto-fetching)
 
 **Testing & Type Checking:**
-- `pnpm test` - Run Vitest unit tests
+- `pnpm test` - Run Vitest unit tests (jsdom environment with setup file at `__tests__/setup.tsx`)
 - `pnpm exec tsc --noEmit` - Type checking (CI enforces zero errors, no `any` or `ts-ignore`)
 
 **Database (Drizzle ORM + SQLite):**
@@ -38,28 +38,38 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Directory Structure:**
 - `app/` - Next.js App Router pages and layouts
+- `app/api/` - RESTful API routes (auth, feeds, items, categories)
 - `lib/auth/` - Authentication utilities (JWT, password hashing, rate limiting)
 - `lib/db/` - Database layer (schema, migrations, connection)
 - `lib/rss/` - RSS feed fetching logic (fetcher, utilities)
-- `lib/api/` - API client functions for frontend consumption
+- `lib/api/` - API client functions for frontend consumption (Type-safe wrappers around fetch)
 - `workers/` - Background worker processes (RSS worker, etc.)
-- `components/` - Reusable UI components (if created)
-- `__tests__/` - Unit tests (mirrors `lib/` structure)
+- `components/` - Reusable UI components (feeds, items, layout, ui)
+- `__tests__/` - Unit tests (mirrors `lib/` and `app/` structure)
 - `openspec/` - OpenSpec SDD workflow files (specs, changes, proposals)
 - `.claude/` - Claude Code skills and commands
 
+**API Route Organization:**
+- Auth endpoints: `/api/auth/login`, `/api/auth/register`, `/api/auth/logout`
+- Feed endpoints: `/api/feeds` (CRUD), `/api/feeds/[id]`, `/api/feeds/[id]/refresh`, `/api/feeds/validate`
+- Item endpoints: `/api/items`, `/api/items/[id]`, `/api/items/[id]/read`, `/api/items/[id]/favorite`
+- Categories: `/api/categories`
+- All authenticated endpoints require JWT token in HTTP-only cookie
+
 **Authentication Patterns:**
-- JWT-based stateless auth (jose library)
-- Password hashing with bcrypt (cost factor: 10)
-- Rate limiting middleware (in-memory, 100 req/min default)
-- Tokens stored in HTTP-only cookies
+- JWT-based stateless auth (jose library, 7-day expiry)
+- Password hashing with bcrypt (cost factor: 10, native bcrypt v6)
+- Rate limiting middleware (in-memory, 5 req/min default for auth endpoints)
+- Tokens stored in HTTP-only cookies (secure in production, strict sameSite)
 
 **Database Schema:**
-- ORM: Drizzle with `sqlite` dialect
-- Schema defined in `lib/db/schema.ts`
-- Exports inferred types: `User`, `NewUser`, etc.
+- ORM: Drizzle with `sqlite` dialect (better-sqlite3 driver)
+- Schema defined in `lib/db/schema.ts` with Drizzle relations
+- Exports inferred types: `User`, `NewUser`, `Feed`, `NewFeed`, `FeedItem`, `NewFeedItem`
 - Migrations output to `lib/db/migrations/`
 - Timestamps use Unix epoch (integer) via SQLite's `strftime('%s', 'now')`
+- Indexes on: `feeds.user_id`, `feed_items.feed_id`, `feed_items.user_id`, `feed_items.published_at`
+- Cascade deletes: When a user is deleted, their feeds and items are deleted; when a feed is deleted, its items are deleted
 
 **Key Configurations:**
 - Path alias: `@/*` maps to project root (tsconfig.json)
@@ -94,7 +104,23 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
   - `POST /api/feeds` - Creates feed and triggers background fetch
 
 **Environment Variables:**
-- `CRON_SECRET` - Secret for authenticating worker requests to refresh-all endpoint
+- `JWT_SECRET` - Secret key for JWT token signing/verification (required for auth)
+- `CRON_SECRET` - Secret for authenticating RSS worker requests to refresh-all endpoint
+
+## Client API Functions
+
+**Architecture:**
+- Location: `lib/api/` (categories.ts, feeds.ts, items.ts, validate.ts)
+- Purpose: Type-safe wrapper functions for frontend to call backend API routes
+- Pattern: Async functions that use `fetch()` to call corresponding `/api/*` endpoints
+- Handle: Request serialization, response parsing, error handling
+- Used by: Client components in `app/` and `components/`
+
+**Benefits:**
+- Type safety: Return types inferred from API responses
+- Centralized: API URLs and request logic in one place
+- Testable: Can mock API calls in unit tests
+- DRY: Avoid repetitive `fetch()` calls in components
 
 
 ## OpenSpec Workflow (SDD)
