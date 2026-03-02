@@ -14,7 +14,7 @@ export default function UnreadItemsPage() {
         </Link>
       </div>
 
-      <ItemList filterUnread />
+      <ItemList filterStatus="unread" showMarkAllRead />
     </div>
   );
 }

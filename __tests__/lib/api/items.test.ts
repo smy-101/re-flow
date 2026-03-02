@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { fetchItems, fetchItemById, markAsRead, toggleFavorite } from '@/lib/api/items';
+import { fetchItems, fetchItemById, markAsRead, toggleFavorite, markAllAsRead } from '@/lib/api/items';
 
 // Mock fetch globally
 const mockFetch = vi.fn();
@@ -208,6 +208,65 @@ describe('lib/api/items', () => {
       const result = await toggleFavorite('1');
 
       expect(result).toBeNull();
+    });
+  });
+
+  describe('markAllAsRead', () => {
+    it('should mark all items as read without feedId', async () => {
+      const response = { success: true, count: 15 };
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => response,
+      });
+
+      const result = await markAllAsRead();
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining('/api/items/mark-all-read'),
+        expect.objectContaining({
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+        })
+      );
+      expect(result).toEqual(response);
+    });
+
+    it('should mark all items as read with feedId', async () => {
+      const response = { success: true, count: 5 };
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => response,
+      });
+
+      const result = await markAllAsRead(1);
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining('/api/feeds/1/mark-all-read'),
+        expect.objectContaining({
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+        })
+      );
+      expect(result).toEqual(response);
+    });
+
+    it('should return success: false on failed request', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        json: async () => ({ message: 'Error' }),
+      });
+
+      const result = await markAllAsRead();
+
+      expect(result).toEqual({ success: false, count: 0 });
+    });
+
+    it('should return success: false on network error', async () => {
+      mockFetch.mockRejectedValueOnce(new Error('Network error'));
+
+      const result = await markAllAsRead();
+
+      expect(result).toEqual({ success: false, count: 0 });
     });
   });
 });

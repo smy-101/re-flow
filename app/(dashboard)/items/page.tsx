@@ -16,7 +16,7 @@ export default function ItemsPage() {
         </div>
       </div>
 
-      <ItemList />
+      <ItemList filterStatus="all" />
     </div>
   );
 }

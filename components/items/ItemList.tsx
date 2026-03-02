@@ -3,22 +3,27 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import ItemCard from './ItemCard';
-import { fetchItems, FeedItem } from '@/lib/api/items';
+import MarkAllReadConfirm from './MarkAllReadConfirm';
+import { fetchItems, markAllAsRead, FeedItem } from '@/lib/api/items';
 import { fetchFeeds, Feed } from '@/lib/api/feeds';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 
+type FilterStatus = 'all' | 'unread' | 'read';
+
 interface ItemListProps {
-  filterUnread?: boolean;
+  filterStatus?: FilterStatus;
   filterFavorite?: boolean;
   feedId?: string;
+  showMarkAllRead?: boolean;
 }
 
 export default function ItemList({
-  filterUnread = false,
+  filterStatus = 'all',
   filterFavorite = false,
   feedId,
+  showMarkAllRead = false,
 }: ItemListProps) {
   const router = useRouter();
   const [items, setItems] = useState<FeedItem[]>([]);
@@ -28,15 +33,27 @@ export default function ItemList({
   const [sortBy, setSortBy] = useState<'newest' | 'oldest'>('newest');
   const [selectedFeed, setSelectedFeed] = useState<string | null>(feedId || null);
 
+  // Mark all as read state
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [isMarking, setIsMarking] = useState(false);
+
   useEffect(() => {
     async function loadData() {
       try {
         setLoading(true);
 
+        // Convert filterStatus to isRead parameter
+        let isRead: boolean | undefined;
+        if (filterStatus === 'unread') {
+          isRead = false;
+        } else if (filterStatus === 'read') {
+          isRead = true;
+        }
+
         const [itemsData, feedsData] = await Promise.all([
           fetchItems({
             feedId: selectedFeed || undefined,
-            isRead: filterUnread ? false : undefined,
+            isRead,
             isFavorite: filterFavorite ? true : undefined,
           }),
           fetchFeeds(),
@@ -52,7 +69,36 @@ export default function ItemList({
     }
 
     loadData();
-  }, [filterUnread, filterFavorite, selectedFeed]);
+  }, [filterStatus, filterFavorite, selectedFeed]);
+
+  const handleMarkAllRead = async () => {
+    try {
+      setIsMarking(true);
+      const feedIdNum = feedId ? parseInt(feedId, 10) : undefined;
+      await markAllAsRead(feedIdNum);
+
+      // Reload data to refresh the list
+      let isRead: boolean | undefined;
+      if (filterStatus === 'unread') {
+        isRead = false;
+      } else if (filterStatus === 'read') {
+        isRead = true;
+      }
+
+      const itemsData = await fetchItems({
+        feedId: selectedFeed || undefined,
+        isRead,
+        isFavorite: filterFavorite ? true : undefined,
+      });
+
+      setItems(itemsData);
+      setIsConfirmOpen(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '标记失败');
+    } finally {
+      setIsMarking(false);
+    }
+  };
 
   // Sort items
   const sortedItems = [...items].sort((a, b) => {
@@ -110,14 +156,16 @@ export default function ItemList({
             />
           </svg>
           <h3 className="text-lg font-medium text-gray-900 mb-2">
-            {filterUnread ? '暂无未读文章' : filterFavorite ? '暂无收藏文章' : '暂无文章'}
+            {filterStatus === 'unread' ? '暂无未读文章' :
+             filterStatus === 'read' ? '暂无已读文章' :
+             filterFavorite ? '暂无收藏文章' :
+             '暂无文章'}
           </h3>
           <p className="text-gray-600">
-            {filterUnread
-              ? '太棒了！你已经读完所有文章'
-              : filterFavorite
-              ? '还没有收藏任何文章'
-              : '还没有添加任何订阅'}
+            {filterStatus === 'unread' ? '太棒了！你已经读完所有文章' :
+             filterStatus === 'read' ? '还没有阅读过任何文章，去探索吧！' :
+             filterFavorite ? '还没有收藏任何文章' :
+             '还没有添加任何订阅'}
           </p>
         </div>
       </Card>
@@ -162,9 +210,20 @@ export default function ItemList({
           </Button>
         )}
 
-        {filterUnread && (
+        {filterStatus === 'unread' && (
           <Button variant="secondary" size="sm" onClick={() => router.push('/items')}>
             显示全部
+          </Button>
+        )}
+
+        {showMarkAllRead && filterStatus === 'unread' && items.length > 0 && (
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={() => setIsConfirmOpen(true)}
+            className="ml-auto"
+          >
+            🔥 全部标记为已读
           </Button>
         )}
       </div>
@@ -175,6 +234,17 @@ export default function ItemList({
           <ItemCard key={item.id} item={item} feedTitle={getFeedTitle(item.feedId)} />
         ))}
       </div>
+
+      {/* Mark All Read Confirmation Dialog */}
+      <MarkAllReadConfirm
+        isOpen={isConfirmOpen}
+        onClose={() => setIsConfirmOpen(false)}
+        onConfirm={handleMarkAllRead}
+        count={items.length}
+        scope={feedId ? 'feed' : 'all'}
+        feedTitle={feedId ? getFeedTitle(parseInt(feedId, 10)) : undefined}
+        isLoading={isMarking}
+      />
     </div>
   );
 }

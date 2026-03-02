@@ -101,3 +101,15 @@ export async function toggleFavorite(itemId: string | number): Promise<FeedItem 
     return null;
   }
 }
+
+// API: Mark all unread items as read
+export async function markAllAsRead(feedId?: number): Promise<{ success: boolean; count: number }> {
+  try {
+    const endpoint = feedId ? `/feeds/${feedId}/mark-all-read` : '/items/mark-all-read';
+    return await request<{ success: boolean; count: number }>(endpoint, {
+      method: 'POST',
+    });
+  } catch {
+    return { success: false, count: 0 };
+  }
+}

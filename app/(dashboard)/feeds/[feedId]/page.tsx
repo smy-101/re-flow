@@ -119,7 +119,7 @@ export default function FeedDetailPage() {
       </div>
 
       {/* Items */}
-      <ItemList feedId={feedId} filterUnread={filter === 'unread'} />
+      <ItemList feedId={feedId} filterStatus={filter} showMarkAllRead={filter === 'unread'} />
     </div>
   );
 }
