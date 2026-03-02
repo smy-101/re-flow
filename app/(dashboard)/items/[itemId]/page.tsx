@@ -4,12 +4,12 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Button from '@/components/ui/Button';
-import { fetchItemById, fetchItems, FeedItem, Feed } from '@/lib/mock-data';
+import { fetchItemById, fetchItems, markAsRead, FeedItem } from '@/lib/api/items';
+import { fetchFeedById, Feed } from '@/lib/api/feeds';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import Card from '@/components/ui/Card';
 import ItemContent from '@/components/items/ItemContent';
 import ItemNavigation from '@/components/items/ItemNavigation';
-import { markAsRead } from '@/lib/mock-data';
 
 export default function ItemDetailPage() {
   const params = useParams();
@@ -45,7 +45,6 @@ export default function ItemDetailPage() {
         }
 
         // Load feed info
-        const { fetchFeedById } = await import('@/lib/mock-data');
         const feedData = await fetchFeedById(itemData.feedId);
         setFeed(feedData);
 
@@ -60,7 +59,7 @@ export default function ItemDetailPage() {
     loadData();
   }, [itemId]);
 
-  const currentItemIndex = allItems.findIndex((i) => i.id === itemId);
+  const currentItemIndex = allItems.findIndex((i) => i.id === parseInt(itemId, 10));
 
   const handlePrevious = () => {
     if (currentItemIndex > 0) {
