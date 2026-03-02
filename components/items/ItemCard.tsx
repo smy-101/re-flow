@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import Card from '@/components/ui/Card';
-import { FeedItem } from '@/lib/mock-data';
+import { FeedItem } from '@/lib/api/items';
 import ReadToggleButton from './ReadToggleButton';
 import FavoriteButton from './FavoriteButton';
 

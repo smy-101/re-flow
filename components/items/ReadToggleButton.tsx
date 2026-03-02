@@ -1,11 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { markAsRead } from '@/lib/mock-data';
+import { markAsRead } from '@/lib/api/items';
 import Button from '@/components/ui/Button';
 
 interface ReadToggleButtonProps {
-  itemId: string;
+  itemId: string | number;
   isRead: boolean;
   onUpdate?: (isRead: boolean) => void;
 }

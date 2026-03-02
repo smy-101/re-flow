@@ -1,16 +1,12 @@
 import { render, screen } from '@testing-library/react';
-import { FeedItem } from '@/lib/mock-data';
+import { FeedItem } from '@/lib/api/items';
 import ItemCard from '@/components/items/ItemCard';
 
 // Mock the API
-vi.mock('@/lib/mock-data', async () => {
-  const actual = await vi.importActual('@/lib/mock-data');
-  return {
-    ...actual,
-    markAsRead: vi.fn(),
-    toggleFavorite: vi.fn(),
-  };
-});
+vi.mock('@/lib/api/items', () => ({
+  markAsRead: vi.fn(),
+  toggleFavorite: vi.fn(),
+}));
 
 describe('ItemCard', () => {
   const mockItem: FeedItem = {

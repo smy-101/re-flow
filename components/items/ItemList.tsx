@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import ItemCard from './ItemCard';
-import { fetchItems, FeedItem, fetchFeeds, Feed } from '@/lib/mock-data';
+import { fetchItems, FeedItem } from '@/lib/api/items';
+import { fetchFeeds, Feed } from '@/lib/api/feeds';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
@@ -62,7 +63,7 @@ export default function ItemList({
     }
   });
 
-  const getFeedTitle = (feedId: string) => {
+  const getFeedTitle = (feedId: number) => {
     const feed = feeds.find((f) => f.id === feedId);
     return feed?.title;
   };
@@ -148,7 +149,7 @@ export default function ItemList({
           >
             <option value="">全部</option>
             {feeds.map((feed) => (
-              <option key={feed.id} value={feed.id}>
+              <option key={feed.id} value={String(feed.id)}>
                 {feed.title}
               </option>
             ))}

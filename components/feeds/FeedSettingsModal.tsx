@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react';
 import Modal from '@/components/ui/Modal';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
-import { updateFeed, Feed, getCategories } from '@/lib/mock-data';
+import { updateFeed, Feed } from '@/lib/api/feeds';
+import { getCategories } from '@/lib/api/categories';
 
 interface FeedSettingsModalProps {
   isOpen: boolean;
@@ -25,12 +26,16 @@ export default function FeedSettingsModal({
   const [category, setCategory] = useState(feed.category || '');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const categories = getCategories();
+  const [categories, setCategories] = useState<string[]>([]);
 
   useEffect(() => {
     setTitle(feed.title);
     setCategory(feed.category || '');
   }, [feed]);
+
+  useEffect(() => {
+    getCategories().then(setCategories);
+  }, []);
 
   const handleSave = async () => {
     setSaving(true);

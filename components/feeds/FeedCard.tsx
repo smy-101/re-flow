@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import Card from '@/components/ui/Card';
-import { Feed } from '@/lib/mock-data';
+import { Feed } from '@/lib/api/feeds';
 
 interface FeedCardProps {
   feed: Feed;

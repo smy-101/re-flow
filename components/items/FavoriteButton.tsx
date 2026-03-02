@@ -1,11 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { toggleFavorite } from '@/lib/mock-data';
+import { toggleFavorite } from '@/lib/api/items';
 import Button from '@/components/ui/Button';
 
 interface FavoriteButtonProps {
-  itemId: string;
+  itemId: string | number;
   isFavorite: boolean;
   onUpdate?: (isFavorite: boolean) => void;
 }

@@ -1,11 +1,13 @@
 'use client';
 
-import { useState, FormEvent } from 'react';
+import { useState, useEffect, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
-import { createFeed, validateFeedUrl, getCategories } from '@/lib/mock-data';
+import { createFeed } from '@/lib/api/feeds';
+import { validateFeedUrl } from '@/lib/api/validate';
+import { getCategories } from '@/lib/api/categories';
 
 interface AddFeedFormProps {
   onSuccess?: () => void;
@@ -24,7 +26,11 @@ export default function AddFeedForm({ onSuccess }: AddFeedFormProps) {
     error?: string;
   } | null>(null);
   const [error, setError] = useState<string>('');
-  const categories = getCategories();
+  const [categories, setCategories] = useState<string[]>([]);
+
+  useEffect(() => {
+    getCategories().then(setCategories);
+  }, []);
 
   const handleValidate = async () => {
     if (!feedUrl.trim()) {

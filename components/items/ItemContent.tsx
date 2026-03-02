@@ -1,6 +1,6 @@
 'use client';
 
-import { FeedItem } from '@/lib/mock-data';
+import { FeedItem } from '@/lib/api/items';
 import Card from '@/components/ui/Card';
 import ReadToggleButton from './ReadToggleButton';
 import FavoriteButton from './FavoriteButton';

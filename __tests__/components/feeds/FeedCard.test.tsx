@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react';
-import { Feed } from '@/lib/mock-data';
+import { Feed } from '@/lib/api/feeds';
 import FeedCard from '@/components/feeds/FeedCard';
 
 describe('FeedCard', () => {

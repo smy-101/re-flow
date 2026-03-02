@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import FeedCard from './FeedCard';
-import { fetchFeeds, Feed } from '@/lib/mock-data';
+import { fetchFeeds, Feed } from '@/lib/api/feeds';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import Card from '@/components/ui/Card';
 import Link from 'next/link';

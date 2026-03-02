@@ -1,5 +1,6 @@
-import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core';
+import { sqliteTable, text, integer, index } from 'drizzle-orm/sqlite-core';
 import { sql } from 'drizzle-orm';
+import { relations } from 'drizzle-orm';
 
 export const users = sqliteTable('users', {
   id: integer('id').primaryKey({ autoIncrement: true }),
@@ -12,3 +13,89 @@ export const users = sqliteTable('users', {
 
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
+
+export const feeds = sqliteTable(
+  'feeds',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    userId: integer('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    title: text('title').notNull(),
+    feedUrl: text('feed_url').notNull().unique(),
+    siteUrl: text('site_url'),
+    description: text('description'),
+    category: text('category'),
+    createdAt: integer('created_at')
+      .notNull()
+      .default(sql`(strftime('%s', 'now'))`),
+    lastUpdatedAt: integer('last_updated_at')
+      .notNull()
+      .default(sql`(strftime('%s', 'now'))`),
+  },
+  (table) => ({
+    userIdIdx: index('feeds_user_id_idx').on(table.userId),
+  }),
+);
+
+export type Feed = typeof feeds.$inferSelect;
+export type NewFeed = typeof feeds.$inferInsert;
+
+export const feedItems = sqliteTable(
+  'feed_items',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    feedId: integer('feed_id')
+      .notNull()
+      .references(() => feeds.id, { onDelete: 'cascade' }),
+    userId: integer('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    title: text('title').notNull(),
+    link: text('link').notNull(),
+    content: text('content').notNull(),
+    publishedAt: integer('published_at').notNull(),
+    isRead: integer('is_read', { mode: 'boolean' }).notNull().default(false),
+    isFavorite: integer('is_favorite', { mode: 'boolean' })
+      .notNull()
+      .default(false),
+    author: text('author'),
+    readingTime: integer('reading_time'),
+    createdAt: integer('created_at')
+      .notNull()
+      .default(sql`(strftime('%s', 'now'))`),
+  },
+  (table) => ({
+    feedIdIdx: index('feed_items_feed_id_idx').on(table.feedId),
+    userIdIdx: index('feed_items_user_id_idx').on(table.userId),
+    publishedAtIdx: index('feed_items_published_at_idx').on(table.publishedAt),
+  }),
+);
+
+export type FeedItem = typeof feedItems.$inferSelect;
+export type NewFeedItem = typeof feedItems.$inferInsert;
+
+// Relations
+export const usersRelations = relations(users, ({ many }) => ({
+  feeds: many(feeds),
+  feedItems: many(feedItems),
+}));
+
+export const feedsRelations = relations(feeds, ({ one, many }) => ({
+  user: one(users, {
+    fields: [feeds.userId],
+    references: [users.id],
+  }),
+  items: many(feedItems),
+}));
+
+export const feedItemsRelations = relations(feedItems, ({ one }) => ({
+  feed: one(feeds, {
+    fields: [feedItems.feedId],
+    references: [feeds.id],
+  }),
+  user: one(users, {
+    fields: [feedItems.userId],
+    references: [users.id],
+  }),
+}));

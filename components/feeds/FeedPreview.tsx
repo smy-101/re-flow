@@ -1,6 +1,6 @@
 'use client';
 
-import { Feed } from '@/lib/mock-data';
+import { Feed } from '@/lib/api/feeds';
 
 interface FeedPreviewProps {
   feed: Pick<Feed, 'title' | 'description' | 'siteUrl' | 'category'>;

@@ -1,6 +1,7 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { createFeed, validateFeedUrl } from '@/lib/mock-data';
+import { createFeed } from '@/lib/api/feeds';
+import { validateFeedUrl } from '@/lib/api/validate';
 import AddFeedForm from '@/components/feeds/AddFeedForm';
 
 // Mock the router
@@ -11,15 +12,17 @@ vi.mock('next/navigation', () => ({
 }));
 
 // Mock the API
-vi.mock('@/lib/mock-data', async () => {
-  const actual = await vi.importActual('@/lib/mock-data');
-  return {
-    ...actual,
-    createFeed: vi.fn(),
-    validateFeedUrl: vi.fn(),
-    getCategories: vi.fn(() => ['技术', '设计', '新闻']),
-  };
-});
+vi.mock('@/lib/api/feeds', () => ({
+  createFeed: vi.fn(),
+}));
+
+vi.mock('@/lib/api/validate', () => ({
+  validateFeedUrl: vi.fn(),
+}));
+
+vi.mock('@/lib/api/categories', () => ({
+  getCategories: vi.fn(() => ['技术', '设计', '新闻']),
+}));
 
 describe('AddFeedForm', () => {
   beforeEach(() => {
