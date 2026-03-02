@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Button from '@/components/ui/Button';
-import { fetchFeedById, Feed } from '@/lib/mock-data';
+import { fetchFeedById, Feed } from '@/lib/api/feeds';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import Card from '@/components/ui/Card';
 import ItemList from '@/components/items/ItemList';
