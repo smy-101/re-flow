@@ -97,3 +97,57 @@ export async function deleteFeed(feedId: string | number): Promise<boolean> {
     return false;
   }
 }
+
+// API: Refresh a single feed
+export async function refreshFeed(
+  feedId: string | number
+): Promise<{ success: boolean; itemsAdded: number; error?: string }> {
+  return await request<{ success: boolean; itemsAdded: number; error?: string }>(
+    `/feeds/${feedId}/refresh`,
+    {
+      method: 'POST',
+    }
+  );
+}
+
+// API: Refresh all feeds (internal use, requires CRON_SECRET)
+export async function refreshAllFeeds(
+  cronSecret: string
+): Promise<{
+  processed: number;
+  totalItemsAdded: number;
+  successCount: number;
+  failureCount: number;
+  results: Array<{
+    feedId: number;
+    success: boolean;
+    itemsAdded: number;
+    error?: string;
+  }>;
+}> {
+  const response = await fetch(`${API_BASE}/feeds/refresh-all`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-cron-secret': cronSecret,
+    },
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ message: 'Request failed' }));
+    throw new Error(error.message || error.error || 'Request failed');
+  }
+
+  return response.json() as Promise<{
+    processed: number;
+    totalItemsAdded: number;
+    successCount: number;
+    failureCount: number;
+    results: Array<{
+      feedId: number;
+      success: boolean;
+      itemsAdded: number;
+      error?: string;
+    }>;
+  }>;
+}

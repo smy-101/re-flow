@@ -4,6 +4,7 @@ import { feeds } from '@/lib/db/schema';
 import { eq, desc } from 'drizzle-orm';
 import { getUserIdFromToken } from '@/lib/auth/jwt';
 import { cookies } from 'next/headers';
+import { fetchAndStoreItems } from '@/lib/rss/fetcher';
 
 // GET /api/feeds - List all feeds for current user
 export async function GET() {
@@ -95,6 +96,11 @@ export async function POST(request: NextRequest) {
         description: '新添加的订阅',
       })
       .returning();
+
+    // Trigger background fetch (non-blocking)
+    fetchAndStoreItems(newFeed.id, userId, feedUrl).catch((error) => {
+      console.error('Background fetch error:', error);
+    });
 
     return NextResponse.json(newFeed, { status: 201 });
   } catch (error) {

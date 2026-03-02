@@ -9,6 +9,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `pnpm build` - Build for production
 - `pnpm start` - Start production server
 - `pnpm lint` - Run ESLint
+- `pnpm worker:rss` - Start RSS worker (background feed fetching)
+
+**Development Environment:**
+- Terminal 1: `pnpm dev` - Run Next.js app
+- Terminal 2: `pnpm worker:rss` - Run RSS worker (optional, for auto-fetching)
 
 **Testing & Type Checking:**
 - `pnpm test` - Run Vitest unit tests
@@ -35,6 +40,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `app/` - Next.js App Router pages and layouts
 - `lib/auth/` - Authentication utilities (JWT, password hashing, rate limiting)
 - `lib/db/` - Database layer (schema, migrations, connection)
+- `lib/rss/` - RSS feed fetching logic (fetcher, utilities)
+- `lib/api/` - API client functions for frontend consumption
+- `workers/` - Background worker processes (RSS worker, etc.)
 - `components/` - Reusable UI components (if created)
 - `__tests__/` - Unit tests (mirrors `lib/` structure)
 - `openspec/` - OpenSpec SDD workflow files (specs, changes, proposals)
@@ -63,6 +71,31 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Uses Tailwind CSS 4 with `@import "tailwindcss"` and `@theme inline` blocks
 - CSS variables defined in app/globals.css for theming (light/dark mode support)
 - Font variables: `--font-geist-sans`, `--font-geist-mono` (loaded in layout.tsx)
+
+## RSS Feed Fetching
+
+**Architecture:**
+- **Fetcher** (`lib/rss/fetcher.ts`): Core RSS parsing and storage logic
+  - Parses RSS feeds using `rss-parser` with 10s timeout
+  - Deduplicates items based on `link` field
+  - Calculates reading time (250 words/minute)
+  - Stores items in `feed_items` table with transaction safety
+
+- **Worker** (`workers/rss-worker.ts`): Independent background process
+  - Runs as separate Node.js process (not in Next.js)
+  - Scheduled via `node-cron` every 30 minutes
+  - Respects minimum 5-minute interval between feed refreshes
+  - Sequential processing to avoid overwhelming servers
+  - Requires `CRON_SECRET` environment variable
+
+- **API Endpoints:**
+  - `POST /api/feeds/[id]/refresh` - Manual single feed refresh (authenticated)
+  - `POST /api/feeds/refresh-all` - Batch refresh (requires CRON_SECRET header)
+  - `POST /api/feeds` - Creates feed and triggers background fetch
+
+**Environment Variables:**
+- `CRON_SECRET` - Secret for authenticating worker requests to refresh-all endpoint
+
 
 ## OpenSpec Workflow (SDD)
 

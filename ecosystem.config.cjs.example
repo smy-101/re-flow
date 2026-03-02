@@ -1,0 +1,64 @@
+// PM2 Ecosystem Configuration
+// This is an example configuration for running both Next.js and RSS Worker in production
+//
+// Usage:
+//   1. Install PM2 globally: npm install -g pm2
+//   2. Copy this file to your project root (if not already there)
+//   3. Update environment variables in env section
+//   4. Start: pm2 start ecosystem.config.cjs
+//   5. Save process list: pm2 save
+//   6. Setup startup script: pm2 startup
+//
+// Commands:
+//   pm2 start ecosystem.config.cjs    - Start all processes
+//   pm2 stop all                      - Stop all processes
+//   pm2 restart all                   - Restart all processes
+//   pm2 logs                          - View logs
+//   pm2 monit                         - Monitor processes
+//   pm2 delete all                    - Stop and remove all processes
+
+module.exports = {
+  apps: [
+    {
+      name: 'nextjs',
+      script: 'node_modules/.bin/next',
+      args: 'start',
+      cwd: './',
+      instances: 1,
+      exec_mode: 'fork',
+      autorestart: true,
+      watch: false,
+      max_memory_restart: '1G',
+      env: {
+        NODE_ENV: 'production',
+        PORT: 3000,
+      },
+      env_production: {
+        NODE_ENV: 'production',
+        PORT: 3000,
+        // Add your production environment variables here:
+        // JWT_SECRET: 'your-production-jwt-secret',
+        // CRON_SECRET: 'your-production-cron-secret',
+      },
+    },
+    {
+      name: 'rss-worker',
+      script: 'node_modules/.bin/tsx',
+      args: 'workers/rss-worker.ts',
+      cwd: './',
+      instances: 1,
+      exec_mode: 'fork',
+      autorestart: true,
+      watch: false,
+      max_memory_restart: '500M',
+      env: {
+        NODE_ENV: 'production',
+      },
+      env_production: {
+        NODE_ENV: 'production',
+        // Add your production environment variables here:
+        // CRON_SECRET: 'your-production-cron-secret',
+      },
+    },
+  ],
+};

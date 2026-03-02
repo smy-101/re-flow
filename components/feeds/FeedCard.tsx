@@ -1,14 +1,19 @@
 'use client';
 
 import Link from 'next/link';
+import { useState } from 'react';
 import Card from '@/components/ui/Card';
-import { Feed } from '@/lib/api/feeds';
+import { Feed, refreshFeed } from '@/lib/api/feeds';
 
 interface FeedCardProps {
   feed: Feed;
+  onRefresh?: (feedId: number) => void;
 }
 
-export default function FeedCard({ feed }: FeedCardProps) {
+export default function FeedCard({ feed, onRefresh }: FeedCardProps) {
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
   const formatDate = (timestamp: number) => {
     const date = new Date(timestamp);
     const now = new Date();
@@ -24,6 +29,57 @@ export default function FeedCard({ feed }: FeedCardProps) {
     } else {
       return date.toLocaleDateString('zh-CN');
     }
+  };
+
+  const handleRefresh = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    setIsRefreshing(true);
+    setError(null);
+
+    try {
+      const result = await refreshFeed(feed.id);
+
+      if (result.success) {
+        // Show toast notification (simple implementation)
+        if (result.itemsAdded > 0) {
+          showToast(`成功刷新！新增 ${result.itemsAdded} 篇文章`, 'success');
+        } else {
+          showToast('刷新成功，没有新内容', 'info');
+        }
+
+        // Call parent callback to refresh the feed list
+        onRefresh?.(feed.id);
+      } else {
+        const errorMessage = result.error || '刷新失败';
+        setError(errorMessage);
+        showToast(errorMessage, 'error');
+      }
+    } catch {
+      const errorMessage = '网络错误，请稍后重试';
+      setError(errorMessage);
+      showToast(errorMessage, 'error');
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
+  // Simple toast implementation
+  const showToast = (message: string, type: 'success' | 'error' | 'info') => {
+    // Create toast element
+    const toast = document.createElement('div');
+    toast.className = `fixed bottom-4 right-4 px-4 py-3 rounded-lg shadow-lg text-white z-50 animate-fade-in ${
+      type === 'success' ? 'bg-green-500' : type === 'error' ? 'bg-red-500' : 'bg-blue-500'
+    }`;
+    toast.textContent = message;
+    document.body.appendChild(toast);
+
+    // Remove after 3 seconds
+    setTimeout(() => {
+      toast.classList.add('animate-fade-out');
+      setTimeout(() => toast.remove(), 300);
+    }, 3000);
   };
 
   return (
@@ -69,20 +125,69 @@ export default function FeedCard({ feed }: FeedCardProps) {
             </div>
           </div>
 
-          <button
-            type="button"
-            className="flex-shrink-0 p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-            onClick={(e) => {
-              e.preventDefault();
-              // TODO: Open settings menu
-            }}
-            aria-label="设置"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
-            </svg>
-          </button>
+          <div className="flex items-center gap-1">
+            {/* Refresh button */}
+            <button
+              type="button"
+              disabled={isRefreshing}
+              onClick={handleRefresh}
+              className={`flex-shrink-0 p-2 rounded-lg transition-colors ${
+                isRefreshing
+                  ? 'text-gray-300 cursor-not-allowed'
+                  : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'
+              }`}
+              aria-label={isRefreshing ? '刷新中...' : '刷新'}
+              title={isRefreshing ? '刷新中...' : '刷新'}
+            >
+              {isRefreshing ? (
+                <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  />
+                </svg>
+              ) : (
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                  />
+                </svg>
+              )}
+            </button>
+
+            <button
+              type="button"
+              className="flex-shrink-0 p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+              onClick={(e) => {
+                e.preventDefault();
+                // TODO: Open settings menu
+              }}
+              aria-label="设置"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+              </svg>
+            </button>
+          </div>
         </div>
+
+        {error && (
+          <div className="mt-2 text-sm text-red-600 bg-red-50 px-2 py-1 rounded">
+            {error}
+          </div>
+        )}
       </Card>
     </Link>
   );
