@@ -1,0 +1,1 @@
+CREATE INDEX `feed_items_is_favorite_idx` ON `feed_items` (`is_favorite`);

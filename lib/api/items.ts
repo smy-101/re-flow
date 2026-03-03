@@ -113,3 +113,12 @@ export async function markAllAsRead(feedId?: number): Promise<{ success: boolean
     return { success: false, count: 0 };
   }
 }
+
+// API: Fetch favorite items count for current user
+export async function fetchFavoriteCount(): Promise<{ count: number }> {
+  try {
+    return await request<{ count: number }>('/favorites/count');
+  } catch {
+    return { count: 0 };
+  }
+}

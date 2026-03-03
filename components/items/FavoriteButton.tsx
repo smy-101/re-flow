@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { toggleFavorite } from '@/lib/api/items';
+import { useFavoriteCount } from '@/lib/context/FavoriteContext';
 import Button from '@/components/ui/Button';
 
 interface FavoriteButtonProps {
@@ -17,15 +18,25 @@ export default function FavoriteButton({
 }: FavoriteButtonProps) {
   const [loading, setLoading] = useState(false);
   const [currentIsFavorite, setCurrentIsFavorite] = useState(isFavorite);
+  const { increment, decrement } = useFavoriteCount();
 
   const handleToggle = async () => {
     setLoading(true);
     try {
       const result = await toggleFavorite(itemId);
       if (result) {
-        setCurrentIsFavorite(result.isFavorite);
+        const newFavoriteStatus = result.isFavorite;
+        setCurrentIsFavorite(newFavoriteStatus);
+
+        // Update favorite count in context
+        if (newFavoriteStatus && !currentIsFavorite) {
+          increment();
+        } else if (!newFavoriteStatus && currentIsFavorite) {
+          decrement();
+        }
+
         if (onUpdate) {
-          onUpdate(result.isFavorite);
+          onUpdate(newFavoriteStatus);
         }
       }
     } catch (err) {

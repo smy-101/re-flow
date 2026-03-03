@@ -1,5 +1,8 @@
+'use client';
+
 import DashboardNavbar from '@/components/layout/DashboardNavbar';
 import Sidebar from '@/components/layout/Sidebar';
+import { FavoriteProvider } from '@/lib/context/FavoriteContext';
 
 export default function DashboardLayout({
   children,
@@ -7,18 +10,20 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="h-screen bg-gray-50 dark:bg-black flex flex-col">
-      <DashboardNavbar />
-      <div className="flex-1 flex overflow-hidden">
-        {/* Desktop Sidebar */}
-        <Sidebar />
-        {/* Main Content Area */}
-        <main className="flex-1 px-4 py-6 overflow-auto">
-          <div className="max-w-5xl mx-auto">
-            {children}
-          </div>
-        </main>
+    <FavoriteProvider>
+      <div className="h-screen bg-gray-50 dark:bg-black flex flex-col">
+        <DashboardNavbar />
+        <div className="flex-1 flex overflow-hidden">
+          {/* Desktop Sidebar */}
+          <Sidebar />
+          {/* Main Content Area */}
+          <main className="flex-1 px-4 py-6 overflow-auto">
+            <div className="max-w-5xl mx-auto">
+              {children}
+            </div>
+          </main>
+        </div>
       </div>
-    </div>
+    </FavoriteProvider>
   );
 }

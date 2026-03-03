@@ -11,6 +11,7 @@ interface SidebarItemProps {
   isActive: boolean;
   collapsed: boolean;
   disabled?: boolean;
+  count?: number;
 }
 
 export default function SidebarItem({
@@ -20,6 +21,7 @@ export default function SidebarItem({
   isActive,
   collapsed,
   disabled = false,
+  count,
 }: SidebarItemProps) {
   const pathname = usePathname();
 
@@ -60,6 +62,11 @@ export default function SidebarItem({
           `}
         >
           {label}
+          {count !== undefined && (
+            <span className="ml-1 text-xs text-gray-500 dark:text-gray-400">
+              ({count})
+            </span>
+          )}
         </span>
       )}
 

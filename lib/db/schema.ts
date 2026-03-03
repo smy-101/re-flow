@@ -69,6 +69,7 @@ export const feedItems = sqliteTable(
     feedIdIdx: index('feed_items_feed_id_idx').on(table.feedId),
     userIdIdx: index('feed_items_user_id_idx').on(table.userId),
     publishedAtIdx: index('feed_items_published_at_idx').on(table.publishedAt),
+    isFavoriteIdx: index('feed_items_is_favorite_idx').on(table.isFavorite),
   }),
 );
 

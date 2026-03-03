@@ -3,6 +3,7 @@
 import { usePathname } from 'next/navigation';
 import { navigationItems, getActiveNavigationItem } from '@/lib/config/navigation';
 import { useSidebar } from '@/hooks/useSidebar';
+import { useFavoriteCount } from '@/lib/context/FavoriteContext';
 import SidebarItem from './SidebarItem';
 import { ChevronsLeft, ChevronsRight } from 'lucide-react';
 
@@ -10,6 +11,7 @@ export default function Sidebar() {
   const pathname = usePathname();
   const { collapsed, toggle } = useSidebar();
   const activeItemId = getActiveNavigationItem(pathname);
+  const { count: favoriteCount } = useFavoriteCount();
 
   return (
     <aside
@@ -48,6 +50,7 @@ export default function Sidebar() {
             isActive={activeItemId === item.id}
             collapsed={collapsed}
             disabled={item.disabled}
+            count={item.id === 'favorites' ? favoriteCount : undefined}
           />
         ))}
       </nav>

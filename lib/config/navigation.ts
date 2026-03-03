@@ -29,7 +29,6 @@ export const navigationItems: NavigationItem[] = [
     label: '收藏',
     href: '/favorites',
     icon: Pin,
-    disabled: true, // 未来功能
   },
   {
     id: 'ai',
