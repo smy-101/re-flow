@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { fetchAndStoreItems } from '@/lib/rss/fetcher';
+import { timingSafeEqual } from 'crypto';
 
 interface RefreshResult {
   success: boolean;
@@ -18,14 +19,30 @@ interface BatchRefreshResult {
   }>;
 }
 
+/**
+ * Safely compare two strings in constant time to prevent timing attacks.
+ * Returns true if the strings match, false otherwise.
+ */
+function safeEqual(a: string, b: string): boolean {
+  // Early return if lengths differ (this doesn't leak timing info for different lengths)
+  if (a.length !== b.length) {
+    return false;
+  }
+
+  // Use timingSafeEqual for constant-time comparison of same-length strings
+  const aBuffer = Buffer.from(a);
+  const bBuffer = Buffer.from(b);
+  return timingSafeEqual(aBuffer, bBuffer);
+}
+
 // POST /api/feeds/refresh-all - Refresh all feeds (for cron/worker)
 export async function POST(request: NextRequest) {
   try {
-    // Check CRON_SECRET for authentication
+    // Check CRON_SECRET for authentication using timing-safe comparison
     const cronSecret = request.headers.get('x-cron-secret');
     const envSecret = process.env.CRON_SECRET;
 
-    if (!cronSecret || cronSecret !== envSecret) {
+    if (!cronSecret || !envSecret || !safeEqual(cronSecret, envSecret)) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 

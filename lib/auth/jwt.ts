@@ -1,6 +1,5 @@
 import { SignJWT, jwtVerify } from 'jose';
 
-const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || '');
 const TOKEN_EXPIRY = '7d';
 
 export interface JWTPayload {
@@ -9,11 +8,19 @@ export interface JWTPayload {
   exp: number;
 }
 
-export async function signToken(userId: number): Promise<string> {
-  const secret = JWT_SECRET;
+function getJwtSecret(): Uint8Array {
+  const secret = process.env.JWT_SECRET;
   if (!secret || secret.length === 0) {
-    throw new Error('JWT_SECRET environment variable is not set');
+    throw new Error(
+      'JWT_SECRET environment variable is not set. ' +
+        'Please set it in your .env.local file.'
+    );
   }
+  return new TextEncoder().encode(secret);
+}
+
+export async function signToken(userId: number): Promise<string> {
+  const secret = getJwtSecret();
 
   return new SignJWT({ sub: String(userId) })
     .setProtectedHeader({ alg: 'HS256' })
@@ -23,10 +30,7 @@ export async function signToken(userId: number): Promise<string> {
 }
 
 export async function verifyToken(token: string): Promise<JWTPayload | null> {
-  const secret = JWT_SECRET;
-  if (!secret || secret.length === 0) {
-    throw new Error('JWT_SECRET environment variable is not set');
-  }
+  const secret = getJwtSecret();
 
   try {
     const { payload } = await jwtVerify(token, secret);

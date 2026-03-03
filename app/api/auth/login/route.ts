@@ -4,6 +4,7 @@ import { users } from '@/lib/db/schema';
 import { verifyPassword } from '@/lib/auth/password';
 import { signToken } from '@/lib/auth/jwt';
 import { checkRateLimit } from '@/lib/auth/rate-limit';
+import { getClientIp } from '@/lib/auth/ip';
 import { eq } from 'drizzle-orm';
 import { cookies } from 'next/headers';
 
@@ -20,10 +21,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get client IP for rate limiting
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0] ||
-               request.headers.get('x-real-ip') ||
-               'unknown';
+    // Get client IP for rate limiting using secure IP extraction
+    const ip = getClientIp(request);
 
     // Check rate limit
     const rateLimit = checkRateLimit(`login:${ip}`);

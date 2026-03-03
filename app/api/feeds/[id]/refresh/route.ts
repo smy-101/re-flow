@@ -2,8 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { feeds } from '@/lib/db/schema';
 import { eq, and } from 'drizzle-orm';
-import { getUserIdFromToken } from '@/lib/auth/jwt';
-import { cookies } from 'next/headers';
+import { getAuthenticatedUser } from '@/lib/auth/auth-helper';
 import { fetchAndStoreItems } from '@/lib/rss/fetcher';
 
 interface RefreshResult {
@@ -18,18 +17,9 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // Get user ID from JWT token
-    const cookieStore = await cookies();
-    const token = cookieStore.get('token')?.value;
-
-    if (!token) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
-    }
-
-    const userId = await getUserIdFromToken(token);
-    if (!userId) {
-      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
-    }
+    // Get authenticated user
+    const userId = await getAuthenticatedUser();
+    if (userId instanceof NextResponse) return userId;
 
     const { id } = await params;
     const feedId = parseInt(id, 10);

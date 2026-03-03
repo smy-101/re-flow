@@ -1,23 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Parser from 'rss-parser';
-import { getUserIdFromToken } from '@/lib/auth/jwt';
-import { cookies } from 'next/headers';
+import { getAuthenticatedUser } from '@/lib/auth/auth-helper';
 
 // POST /api/feeds/validate - Validate RSS feed URL
 export async function POST(request: NextRequest) {
   try {
-    // Get user ID from JWT token
-    const cookieStore = await cookies();
-    const token = cookieStore.get('token')?.value;
-
-    if (!token) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
-    }
-
-    const userId = await getUserIdFromToken(token);
-    if (!userId) {
-      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
-    }
+    // Get authenticated user
+    const userId = await getAuthenticatedUser();
+    if (userId instanceof NextResponse) return userId;
 
     const body = await request.json();
     const { feedUrl } = body;

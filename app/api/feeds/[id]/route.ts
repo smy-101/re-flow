@@ -2,8 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { feeds, feedItems } from '@/lib/db/schema';
 import { eq, and } from 'drizzle-orm';
-import { getUserIdFromToken } from '@/lib/auth/jwt';
-import { cookies } from 'next/headers';
+import { getAuthenticatedUser } from '@/lib/auth/auth-helper';
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -12,18 +11,9 @@ interface RouteContext {
 // GET /api/feeds/[id] - Get a single feed by ID
 export async function GET(request: NextRequest, context: RouteContext) {
   try {
-    // Get user ID from JWT token
-    const cookieStore = await cookies();
-    const token = cookieStore.get('token')?.value;
-
-    if (!token) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
-    }
-
-    const userId = await getUserIdFromToken(token);
-    if (!userId) {
-      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
-    }
+    // Get authenticated user
+    const userId = await getAuthenticatedUser();
+    if (userId instanceof NextResponse) return userId;
 
     const { id } = await context.params;
     const feedId = parseInt(id, 10);
@@ -62,18 +52,9 @@ export async function GET(request: NextRequest, context: RouteContext) {
 // PUT /api/feeds/[id] - Update a feed
 export async function PUT(request: NextRequest, context: RouteContext) {
   try {
-    // Get user ID from JWT token
-    const cookieStore = await cookies();
-    const token = cookieStore.get('token')?.value;
-
-    if (!token) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
-    }
-
-    const userId = await getUserIdFromToken(token);
-    if (!userId) {
-      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
-    }
+    // Get authenticated user
+    const userId = await getAuthenticatedUser();
+    if (userId instanceof NextResponse) return userId;
 
     const { id } = await context.params;
     const feedId = parseInt(id, 10);
@@ -123,18 +104,9 @@ export async function PUT(request: NextRequest, context: RouteContext) {
 // DELETE /api/feeds/[id] - Delete a feed
 export async function DELETE(request: NextRequest, context: RouteContext) {
   try {
-    // Get user ID from JWT token
-    const cookieStore = await cookies();
-    const token = cookieStore.get('token')?.value;
-
-    if (!token) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
-    }
-
-    const userId = await getUserIdFromToken(token);
-    if (!userId) {
-      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
-    }
+    // Get authenticated user
+    const userId = await getAuthenticatedUser();
+    if (userId instanceof NextResponse) return userId;
 
     const { id } = await context.params;
     const feedId = parseInt(id, 10);
