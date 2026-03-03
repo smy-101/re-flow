@@ -87,7 +87,14 @@ rules:
     - 每个任务粒度不超过 2 小时
     - 任务格式：`- [ ] <动作动词> <目标文件或模块>`
     - 按"基础设施 → 核心逻辑 → UI → 测试 → 类型检查"顺序排列
-    - 每个涉及业务逻辑或 UI 组件的 change 必须包含单元测试任务（Vitest + React Testing Library）
+    - 测试分层策略（按代码层级决定测试方式，不得混淆）：
+      【自动化测试层】以下层级必须编写 Vitest 单元测试，change 涉及时必须包含测试任务：
+        - lib/auth/、lib/rss/、lib/db/queries/、lib/api/ — 纯逻辑，无渲染依赖，AI 可准确编写
+      【手工测试层】以下层级禁止编写自动化测试，改为手工验证：
+        - components/ — RTL 测试与组件实现细节耦合过深，mock 维护成本高，准确率低
+        - app/(dashboard)/ 及所有页面文件 — Next.js Server Components 无法在 jsdom 中可靠运行
+          jsdom 环境下测试页面路由层 mock 代价远超价值，测试结果可信度低
+        - 手工测试任务格式：`- [ ] 手工验证 <页面或组件>：<验证项描述>`
     - 必须包含 ESLint 执行任务：`- [ ] 运行 pnpm lint 并确认无 error（无新增 warning）`
     - 不得通过新增 `eslint-disable` / `eslint-disable-next-line` / `@ts-ignore` 绕过校验（除非在任务中明确说明原因与范围）
     - 测试执行策略：只运行与本次 change 直接相关的测试文件，不得全量执行
@@ -95,5 +102,5 @@ rules:
       - 示例：`pnpm test __tests__/lib/rss/` 或 `pnpm test AddFeedForm`
       - 禁止使用 `.skip` / `test.skip` / `it.skip` / `describe.skip` 跳过任何用例
       - 所有被执行的测试必须 100% 通过，无失败、无报错
-    - 必须包含测试执行任务：`- [ ] 运行 pnpm test <相关测试路径> 并确认全部通过`
+    - 涉及自动化测试层时，必须包含测试执行任务：`- [ ] 运行 pnpm test <相关测试路径> 并确认全部通过`
     - 最后一个任务必须是：`- [ ] 运行 pnpm exec tsc --noEmit 确认零类型错误`
