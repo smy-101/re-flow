@@ -23,30 +23,44 @@ context: |
     - 语言：TypeScript 5（严格模式，tsconfig.json strict: true）
     - UI：React 19 + Tailwind CSS 4
     - 包管理：pnpm
+    - 数据库：Drizzle ORM + SQLite（better-sqlite3 驱动，同步 API）
+    - 认证：JWT（jose v6，7 天有效期）+ bcrypt v6（cost factor 10）
+    - 限流：内存级速率限制中间件（5 req/min，lib/auth/rate-limit.ts）
+    - RSS 解析：rss-parser（10 秒超时）
+    - 后台任务：node-cron（rss-worker，每 30 分钟自动拉取）
     - 代码规范：ESLint（eslint-config-next）
-    - 单元测试：Vitest + React Testing Library（测试文件放在 __tests__/ 或 *.test.ts(x) 旁置）
+    - 单元测试：Vitest + React Testing Library + fast-check（属性测试）
+      测试文件放在 __tests__/（镜像 lib/ 和 app/ 结构）或 *.test.ts(x) 旁置
     - 类型检查：pnpm exec tsc --noEmit（CI 强制通过，不允许 any 和 ts-ignore）
 
   目录约定：
-    - app/          — Next.js App Router 页面与布局
-    - components/   — 可复用 UI 组件（若存在）
-    - lib/          — 工具函数与业务逻辑（若存在）
-    - openspec/     — SDD 规格文件（不含业务代码）
+    - app/             — Next.js App Router 页面与布局
+    - app/api/         — RESTful API 路由（auth / feeds / items / categories）
+    - app/(dashboard)/ — 登录后的仪表盘布局与页面
+    - components/      — 可复用 UI 组件（feeds / items / layout / ui）
+    - lib/auth/        — 认证工具（JWT、密码哈希、限流、IP 提取）
+    - lib/db/          — Drizzle schema、migrations、queries
+    - lib/rss/         — RSS 拉取与解析逻辑（fetcher.ts）
+    - lib/api/         — 前端 API 调用封装（类型安全 fetch wrapper）
+    - workers/         — 后台 worker 进程（rss-worker.ts）
+    - __tests__/       — 单元测试（镜像 lib/ 和 app/ 目录结构）
+    - openspec/        — SDD 规格文件（不含业务代码）
+    - openspec/specs/  — 已归档规格（提案时优先引用，避免重复定义）
 
   提交规范：Conventional Commits（feat / fix / chore / docs / refactor）
   样式规范：Tailwind CSS utility-first，避免自定义 CSS，优先使用 CSS 变量
   组件规范：函数式组件 + React Hooks，禁止 class 组件
 
-  可用 Skills（开发过程中按场景调用）：
-    - vercel-react-best-practices
+  可用 Skills（开发过程中按场景调用，使用 read_file 读取对应 SKILL.md）：
+    - react-best-practices（路径：.claude/skills/react-best-practices/SKILL.md）
         触发时机：编写/重构 React 组件、Next.js 页面、数据获取逻辑、Bundle 优化时
         涵盖：消除瀑布请求、Bundle 体积、Server/Client 组件、重渲染优化、JS 性能等 57 条规则
-    - vercel-composition-patterns
+    - composition-patterns（路径：.claude/skills/composition-patterns/SKILL.md）
         触发时机：组件出现大量 boolean props、构建可复用组件库、设计组合式 API、代码审查组件架构时
         涵盖：复合组件（Compound Components）、状态提升、Context 解耦、React 19 API 变更
-    - web-design-guidelines
+    - web-design-guidelines（路径：.claude/skills/web-design-guidelines/SKILL.md）
         触发时机：用户要求"review UI"/"检查可访问性"/"审查设计"/"检查 UX"时
-        用法：从 https://raw.githubusercontent.com/vercel-labs/web-interface-guidelines/main/command.md 获取最新规则后审查目标文件
+        用法：读取本地 SKILL.md 获取规则后审查目标文件
 
 # 各 artifact 的专属规则（仅对匹配的 artifact 生效）
 rules:
