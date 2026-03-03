@@ -5,13 +5,7 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 First, run the development server:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
 pnpm dev
-# or
-bun dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
@@ -19,6 +13,52 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+
+## Testing
+
+本项目使用 Vitest + React Testing Library 进行测试。
+
+### 运行测试
+
+```bash
+# 运行所有测试
+pnpm test
+
+# 运行特定测试文件
+pnpm test __tests__/lib/auth/jwt.test.ts
+
+# 监视模式（开发时使用）
+pnpm test --watch
+
+# 覆盖率报告
+pnpm test --coverage
+```
+
+### 类型检查
+
+```bash
+pnpm exec tsc --noEmit
+```
+
+### Lint
+
+```bash
+pnpm lint
+```
+
+### 测试文档
+
+详细的测试策略和最佳实践请参阅 [`__tests__/README.md`](__tests__/README.md)。
+
+## RSS Worker
+
+启动 RSS 后台 Worker 以自动刷新订阅源：
+
+```bash
+pnpm worker:rss
+```
+
+Worker 将每 30 分钟自动刷新所有订阅源。
 
 ## Learn More
 
