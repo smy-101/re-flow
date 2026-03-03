@@ -1,0 +1,37 @@
+# fixed-viewport-layout Specification
+
+## Purpose
+TBD - created by archiving change fix-sidebar-scrolling. Update Purpose after archive.
+## Requirements
+### Requirement: 固定视口布局
+
+系统 SHALL 确保仪表盘布局固定在视口内，滚动仅在主内容区域内部发生。
+
+#### Scenario: 内容较多时的滚动行为
+- **GIVEN** 用户在任何受保护页面
+- **WHEN** 页面内容超过视口高度
+- **THEN** 页面根元素保持固定在视口内
+- **AND** 侧边栏保持可见
+- **AND** 滚动仅在主内容区域（`<main>`）内部发生
+
+#### Scenario: 侧边栏始终可见
+- **GIVEN** 用户在任何受保护页面
+- **WHEN** 用户在主内容区域滚动
+- **THEN** 侧边栏保持固定位置
+- **AND** 侧边栏不会随内容滚动而消失
+- **AND** 侧边栏的导航按钮始终可访问
+
+#### Scenario: 布局高度限制
+- **GIVEN** 用户在任何受保护页面
+- **WHEN** 页面渲染完成
+- **THEN** 布局容器高度限制为 100vh
+- **AND** 导航栏固定在顶部
+- **AND** 侧边栏和主内容区域在剩余空间内显示
+
+#### Scenario: 移动端布局不受影响
+- **GIVEN** 用户使用移动设备访问
+- **WHEN** 访问任何受保护页面
+- **THEN** 侧边栏保持隐藏状态（已有行为）
+- **AND** 移动端抽屉导航正常工作
+- **AND** 移动端布局不发生变化
+
