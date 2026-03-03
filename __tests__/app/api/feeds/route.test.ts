@@ -10,6 +10,10 @@ vi.mock('@/lib/db', () => ({
     query: {
       feeds: {
         findMany: vi.fn(),
+        findFirst: vi.fn(),
+      },
+      feedItems: {
+        findMany: vi.fn(),
       },
     },
     select: vi.fn(),
@@ -42,6 +46,10 @@ describe('app/api/feeds/route', () => {
     mockRequest = new Request('http://localhost/api/feeds', {
       method: 'GET',
     });
+
+    // Setup default db mocks
+    vi.mocked(db.query.feeds.findFirst).mockResolvedValue(undefined);
+    vi.mocked(db.query.feedItems.findMany).mockResolvedValue([]);
   });
 
   describe('GET', () => {
@@ -52,11 +60,12 @@ describe('app/api/feeds/route', () => {
       mockCookieStore.get.mockReturnValueOnce({ value: 'valid-token' });
 
       const mockFeeds = [
-        { id: 1, userId: 1, title: 'Feed 1', unreadCount: 5 },
-        { id: 2, userId: 1, title: 'Feed 2', unreadCount: 0 },
+        { id: 1, userId: 1, title: 'Feed 1' },
+        { id: 2, userId: 1, title: 'Feed 2' },
       ];
 
       vi.mocked(db.query.feeds.findMany).mockResolvedValueOnce(mockFeeds as any);
+      vi.mocked(db.query.feedItems.findMany).mockResolvedValue([]); // Empty unread items
       vi.mocked(db.select).mockReturnValueOnce({
         from: vi.fn().mockReturnThis(),
         where: vi.fn().mockReturnThis(),
@@ -66,7 +75,11 @@ describe('app/api/feeds/route', () => {
       const data = await response.json();
 
       expect(response.status).toBe(200);
-      expect(data).toEqual(mockFeeds);
+      // API dynamically calculates unreadCount (0 in our mock)
+      expect(data).toEqual([
+        { id: 1, userId: 1, title: 'Feed 1', unreadCount: 0 },
+        { id: 2, userId: 1, title: 'Feed 2', unreadCount: 0 },
+      ]);
     });
 
     it('should return 401 if no token provided', async () => {

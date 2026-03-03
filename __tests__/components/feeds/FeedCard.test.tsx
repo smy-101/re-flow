@@ -27,8 +27,8 @@ describe('FeedCard', () => {
 
   it('shows green dot when unread count > 0', () => {
     render(<FeedCard feed={mockFeed} />);
-    const dot = screen.getByRole('button', { name: /设置/i }).parentElement?.querySelector('.bg-green-500');
-    expect(dot).toBeInTheDocument();
+    const greenDot = document.querySelector('.bg-green-500');
+    expect(greenDot).toBeInTheDocument();
   });
 
   it('shows "暂无新内容" when unread count is 0', () => {

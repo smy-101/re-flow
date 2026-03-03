@@ -110,5 +110,65 @@ describe('Rate Limiter', () => {
         resetRateLimit('non-existent-identifier');
       }).not.toThrow();
     });
+
+    it('should handle empty string identifier', () => {
+      const result = checkRateLimit('');
+
+      expect(result.allowed).toBe(true);
+      expect(result.remaining).toBe(4);
+    });
+
+    it('should handle 1KB identifier without issues', () => {
+      const longIdentifier = 'a'.repeat(1024);
+      const result = checkRateLimit(longIdentifier);
+
+      expect(result.allowed).toBe(true);
+      expect(result.remaining).toBe(4);
+    });
+
+    it('should handle 10KB identifier without issues', () => {
+      const longIdentifier = 'a'.repeat(10240);
+      const result = checkRateLimit(longIdentifier);
+
+      expect(result.allowed).toBe(true);
+      expect(result.remaining).toBe(4);
+    });
+
+    it('should accurately count concurrent requests', async () => {
+      const results = [];
+
+      // Simulate concurrent requests
+      for (let i = 0; i < 7; i++) {
+        results.push(checkRateLimit('concurrent-test-id'));
+      }
+
+      // First 5 should be allowed
+      for (let i = 0; i < 5; i++) {
+        expect(results[i].allowed).toBe(true);
+      }
+
+      // Last 2 should be blocked
+      for (let i = 5; i < 7; i++) {
+        expect(results[i].allowed).toBe(false);
+      }
+    });
+
+    it('should handle system time rollback', () => {
+      const now = Date.now();
+      vi.spyOn(Date, 'now').mockReturnValue(now);
+
+      // Make some requests
+      const result1 = checkRateLimit('time-rollback-test');
+      expect(result1.allowed).toBe(true);
+
+      // Simulate time rollback (move time backwards)
+      vi.spyOn(Date, 'now').mockReturnValue(now - 10000);
+
+      // Should still allow request (time-based reset shouldn't cause issues)
+      const result2 = checkRateLimit('time-rollback-test');
+      expect(result2.allowed).toBe(true);
+
+      vi.restoreAllMocks();
+    });
   });
 });

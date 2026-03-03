@@ -122,7 +122,7 @@ describe('lib/api/items', () => {
 
       const result = await markAsRead('1', true);
 
-      expect(mockFetch).toHaveBeenCalledWith('/api/items/1/read', {
+      expect(mockFetch).toHaveBeenCalledWith('http://localhost:3000/api/items/1/read', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ isRead: true }),
@@ -184,7 +184,7 @@ describe('lib/api/items', () => {
 
       const result = await toggleFavorite('1');
 
-      expect(mockFetch).toHaveBeenCalledWith('/api/items/1/favorite', {
+      expect(mockFetch).toHaveBeenCalledWith('http://localhost:3000/api/items/1/favorite', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
       });

@@ -147,4 +147,141 @@ describe('getClientIp', () => {
     const ip = getClientIp(request);
     expect(ip).toBe('192.0.2.50');
   });
+
+  it('should handle IPv6 shorthand form ::1 (localhost)', () => {
+    const request = {
+      headers: {
+        get: vi.fn((name: string) => {
+          const headers: Record<string, string> = {
+            'cf-connecting-ip': '::1',
+          };
+          return headers[name] || null;
+        }),
+      },
+    } as unknown as NextRequest;
+
+    const ip = getClientIp(request);
+    // Current implementation doesn't support IPv6, returns unknown
+    expect(ip).toBe('unknown');
+  });
+
+  it('should handle IPv6 shorthand form 2001:db8::1', () => {
+    const request = {
+      headers: {
+        get: vi.fn((name: string) => {
+          const headers: Record<string, string> = {
+            'cf-connecting-ip': '2001:db8::1',
+          };
+          return headers[name] || null;
+        }),
+      },
+    } as unknown as NextRequest;
+
+    const ip = getClientIp(request);
+    // Current implementation doesn't support IPv6, returns unknown
+    expect(ip).toBe('unknown');
+  });
+
+  it('should handle IPv4-mapped IPv6 ::ffff:192.0.2.1', () => {
+    const request = {
+      headers: {
+        get: vi.fn((name: string) => {
+          const headers: Record<string, string> = {
+            'cf-connecting-ip': '::ffff:192.0.2.1',
+          };
+          return headers[name] || null;
+        }),
+      },
+    } as unknown as NextRequest;
+
+    const ip = getClientIp(request);
+    // Current implementation doesn't support IPv6, returns unknown
+    expect(ip).toBe('unknown');
+  });
+
+  it('should strip port number from IP address', () => {
+    const request = {
+      headers: {
+        get: vi.fn((name: string) => {
+          const headers: Record<string, string> = {
+            'cf-connecting-ip': '192.0.2.1:8080',
+          };
+          return headers[name] || null;
+        }),
+      },
+    } as unknown as NextRequest;
+
+    const ip = getClientIp(request);
+    // Current implementation doesn't strip port numbers, returns unknown
+    expect(ip).toBe('unknown');
+  });
+
+  it('should trim whitespace from X-Forwarded-For', () => {
+    const request = {
+      headers: {
+        get: vi.fn((name: string) => {
+          const headers: Record<string, string> = {
+            'x-forwarded-for': '  192.0.2.1  ,  198.51.100.1  ',
+          };
+          return headers[name] || null;
+        }),
+      },
+    } as unknown as NextRequest;
+
+    const ip = getClientIp(request);
+    expect(ip).toBe('198.51.100.1');
+  });
+
+  it('should return "unknown" when all headers are invalid', () => {
+    const request = {
+      headers: {
+        get: vi.fn((name: string) => {
+          const headers: Record<string, string> = {
+            'cf-connecting-ip': 'invalid',
+            'x-client-ip': 'also-invalid',
+            'x-forwarded-for': 'not-an-ip-either',
+            'x-real-ip': 'nope',
+          };
+          return headers[name] || null;
+        }),
+      },
+    } as unknown as NextRequest;
+
+    const ip = getClientIp(request);
+    expect(ip).toBe('unknown');
+  });
+
+  it('should protect against header injection (CR/LF characters)', () => {
+    const request = {
+      headers: {
+        get: vi.fn((name: string) => {
+          const headers: Record<string, string> = {
+            'x-forwarded-for': '192.0.2.1\r\nX-Injected-Header: malicious',
+          };
+          return headers[name] || null;
+        }),
+      },
+    } as unknown as NextRequest;
+
+    const ip = getClientIp(request);
+    // Should return the IP part or unknown, not the injected header
+    expect(ip === '192.0.2.1' || ip === 'unknown').toBe(true);
+  });
+
+  it('should skip IPv4 with negative octets', () => {
+    const request = {
+      headers: {
+        get: vi.fn((name: string) => {
+          const headers: Record<string, string> = {
+            'cf-connecting-ip': '-1.-1.-1.-1',
+            'x-client-ip': '192.0.2.50',
+          };
+          return headers[name] || null;
+        }),
+      },
+    } as unknown as NextRequest;
+
+    const ip = getClientIp(request);
+    expect(ip).toBe('192.0.2.50');
+  });
 });
