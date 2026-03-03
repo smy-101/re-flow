@@ -20,7 +20,9 @@ export default function FavoriteButton({
   const [currentIsFavorite, setCurrentIsFavorite] = useState(isFavorite);
   const { increment, decrement } = useFavoriteCount();
 
-  const handleToggle = async () => {
+  const handleToggle = async (e: React.MouseEvent) => {
+    e.stopPropagation(); // 阻止事件冒泡到父级 Link 组件
+    e.preventDefault(); // 阻止默认行为
     setLoading(true);
     try {
       const result = await toggleFavorite(itemId);

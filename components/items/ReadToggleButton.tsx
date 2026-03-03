@@ -18,7 +18,9 @@ export default function ReadToggleButton({
   const [loading, setLoading] = useState(false);
   const [currentIsRead, setCurrentIsRead] = useState(isRead);
 
-  const handleToggle = async () => {
+  const handleToggle = async (e: React.MouseEvent) => {
+    e.stopPropagation(); // 阻止事件冒泡到父级 Link 组件
+    e.preventDefault(); // 阻止默认行为
     setLoading(true);
     try {
       const newStatus = !currentIsRead;

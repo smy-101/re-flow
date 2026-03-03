@@ -3,9 +3,17 @@ import { render, screen, waitFor } from '@testing-library/react';
 import ItemList from '@/components/items/ItemList';
 import * as itemsApi from '@/lib/api/items';
 import * as feedsApi from '@/lib/api/feeds';
+import { FavoriteProvider } from '@/lib/context/FavoriteContext';
 
-// Mock the API modules
-vi.mock('@/lib/api/items');
+// Mocks
+vi.mock('@/lib/api/items', () => ({
+  fetchItems: vi.fn(),
+  markAsRead: vi.fn(),
+  toggleFavorite: vi.fn(),
+  fetchFavoriteCount: vi.fn(() => Promise.resolve({ count: 0 })),
+  markAllAsRead: vi.fn(),
+  fetchItemById: vi.fn(),
+}));
 vi.mock('@/lib/api/feeds');
 vi.mock('next/navigation', () => ({
   useRouter: () => ({
@@ -14,6 +22,10 @@ vi.mock('next/navigation', () => ({
 }));
 
 describe('ItemList', () => {
+  const renderWithProvider = (ui: React.ReactElement) => {
+    return render(<FavoriteProvider>{ui}</FavoriteProvider>);
+  };
+
   const mockItems = [
     {
       id: 1,
@@ -49,7 +61,7 @@ describe('ItemList', () => {
     vi.mocked(itemsApi.fetchItems).mockResolvedValue(mockItems);
     vi.mocked(feedsApi.fetchFeeds).mockResolvedValue(mockFeeds);
 
-    render(<ItemList filterStatus="all" />);
+    renderWithProvider(<ItemList filterStatus="all" />);
 
     await waitFor(() => {
       expect(screen.getByText('Test Article 1')).toBeInTheDocument();
@@ -61,7 +73,7 @@ describe('ItemList', () => {
     vi.mocked(itemsApi.fetchItems).mockResolvedValue([mockItems[0]]);
     vi.mocked(feedsApi.fetchFeeds).mockResolvedValue(mockFeeds);
 
-    render(<ItemList filterStatus="unread" />);
+    renderWithProvider(<ItemList filterStatus="unread" />);
 
     await waitFor(() => {
       expect(itemsApi.fetchItems).toHaveBeenCalledWith({
@@ -76,7 +88,7 @@ describe('ItemList', () => {
     vi.mocked(itemsApi.fetchItems).mockResolvedValue([mockItems[1]]);
     vi.mocked(feedsApi.fetchFeeds).mockResolvedValue(mockFeeds);
 
-    render(<ItemList filterStatus="read" />);
+    renderWithProvider(<ItemList filterStatus="read" />);
 
     await waitFor(() => {
       expect(itemsApi.fetchItems).toHaveBeenCalledWith({
@@ -91,7 +103,7 @@ describe('ItemList', () => {
     vi.mocked(itemsApi.fetchItems).mockResolvedValue(mockItems);
     vi.mocked(feedsApi.fetchFeeds).mockResolvedValue(mockFeeds);
 
-    render(<ItemList filterStatus="all" />);
+    renderWithProvider(<ItemList filterStatus="all" />);
 
     await waitFor(() => {
       expect(itemsApi.fetchItems).toHaveBeenCalledWith({
@@ -106,7 +118,7 @@ describe('ItemList', () => {
     vi.mocked(itemsApi.fetchItems).mockResolvedValue([]);
     vi.mocked(feedsApi.fetchFeeds).mockResolvedValue(mockFeeds);
 
-    render(<ItemList filterStatus="unread" />);
+    renderWithProvider(<ItemList filterStatus="unread" />);
 
     await waitFor(() => {
       expect(screen.getByText('暂无未读文章')).toBeInTheDocument();
@@ -118,7 +130,7 @@ describe('ItemList', () => {
     vi.mocked(itemsApi.fetchItems).mockResolvedValue([]);
     vi.mocked(feedsApi.fetchFeeds).mockResolvedValue(mockFeeds);
 
-    render(<ItemList filterStatus="read" />);
+    renderWithProvider(<ItemList filterStatus="read" />);
 
     await waitFor(() => {
       expect(screen.getByText('暂无已读文章')).toBeInTheDocument();
@@ -130,7 +142,7 @@ describe('ItemList', () => {
     vi.mocked(itemsApi.fetchItems).mockResolvedValue([mockItems[0]]);
     vi.mocked(feedsApi.fetchFeeds).mockResolvedValue(mockFeeds);
 
-    render(<ItemList filterStatus="unread" showMarkAllRead />);
+    renderWithProvider(<ItemList filterStatus="unread" showMarkAllRead />);
 
     await waitFor(() => {
       expect(screen.getByText('🔥 全部标记为已读')).toBeInTheDocument();
@@ -141,7 +153,7 @@ describe('ItemList', () => {
     vi.mocked(itemsApi.fetchItems).mockResolvedValue(mockItems);
     vi.mocked(feedsApi.fetchFeeds).mockResolvedValue(mockFeeds);
 
-    render(<ItemList filterStatus="all" showMarkAllRead />);
+    renderWithProvider(<ItemList filterStatus="all" showMarkAllRead />);
 
     await waitFor(() => {
       expect(screen.queryByText('🔥 全部标记为已读')).not.toBeInTheDocument();
@@ -152,7 +164,7 @@ describe('ItemList', () => {
     vi.mocked(itemsApi.fetchItems).mockImplementation(() => new Promise(() => {}));
     vi.mocked(feedsApi.fetchFeeds).mockImplementation(() => new Promise(() => {}));
 
-    const { container } = render(<ItemList filterStatus="all" />);
+    const { container } = renderWithProvider(<ItemList filterStatus="all" />);
 
     expect(container.querySelector('.animate-spin')).toBeInTheDocument();
   });
