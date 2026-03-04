@@ -8,9 +8,10 @@ import { Feed, refreshFeed } from '@/lib/api/feeds';
 interface FeedCardProps {
   feed: Feed;
   onRefresh?: (feedId: number) => void;
+  onOpenSettings?: (feed: Feed) => void;
 }
 
-export default function FeedCard({ feed, onRefresh }: FeedCardProps) {
+export default function FeedCard({ feed, onRefresh, onOpenSettings }: FeedCardProps) {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -172,7 +173,8 @@ export default function FeedCard({ feed, onRefresh }: FeedCardProps) {
               className="flex-shrink-0 p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
               onClick={(e) => {
                 e.preventDefault();
-                // TODO: Open settings menu
+                e.stopPropagation();
+                onOpenSettings?.(feed);
               }}
               aria-label="设置"
             >

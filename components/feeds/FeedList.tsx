@@ -1,66 +1,24 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import FeedCard from './FeedCard';
-import { fetchFeeds, Feed } from '@/lib/api/feeds';
-import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import { Feed } from '@/lib/api/feeds';
 import Card from '@/components/ui/Card';
 import Link from 'next/link';
 
 interface FeedListProps {
+  feeds: Feed[];
+  onOpenSettings: (feed: Feed) => void;
   pageSize?: number;
 }
 
-export default function FeedList({ pageSize = 12 }: FeedListProps) {
-  const [feeds, setFeeds] = useState<Feed[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+export default function FeedList({ feeds, onOpenSettings, pageSize = 12 }: FeedListProps) {
   const [currentPage, setCurrentPage] = useState(1);
 
   const totalPages = Math.ceil(feeds.length / pageSize);
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = startIndex + pageSize;
   const currentFeeds = feeds.slice(startIndex, endIndex);
-
-  useEffect(() => {
-    async function loadFeeds() {
-      try {
-        setLoading(true);
-        const data = await fetchFeeds();
-        setFeeds(data);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : '加载订阅失败');
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    loadFeeds();
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="flex justify-center py-12">
-        <LoadingSpinner size="lg" />
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <Card>
-        <div className="text-center py-8">
-          <p className="text-red-600 mb-4">{error}</p>
-          <button
-            onClick={() => window.location.reload()}
-            className="text-blue-600 hover:underline"
-          >
-            重新加载
-          </button>
-        </div>
-      </Card>
-    );
-  }
 
   if (feeds.length === 0) {
     return (
@@ -99,7 +57,7 @@ export default function FeedList({ pageSize = 12 }: FeedListProps) {
     <div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
         {currentFeeds.map((feed) => (
-          <FeedCard key={feed.id} feed={feed} />
+          <FeedCard key={feed.id} feed={feed} onOpenSettings={onOpenSettings} />
         ))}
       </div>
 
