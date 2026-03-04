@@ -258,7 +258,7 @@ describe('Test Factory Functions', () => {
 
     it('should support partial overrides with correct types', () => {
       // This should not cause type errors
-      const feed = createMockFeed({ title: 'Test', unreadCount: 5 });
+      const feed = createMockFeed({ title: 'Test' });
       const item = createMockItem({ title: 'Test', isFavorite: true });
       const user = createMockUser({ username: 'test' });
 

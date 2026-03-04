@@ -139,12 +139,12 @@ describe('Environment Variable Validation Tests', () => {
     });
 
     it('should handle boolean environment variables', () => {
-      process.env.NODE_ENV = 'production';
+      (process.env as Record<string, string>).NODE_ENV = 'production';
       const isProduction = process.env.NODE_ENV === 'production';
 
       expect(isProduction).toBe(true);
 
-      process.env.NODE_ENV = 'development';
+      (process.env as Record<string, string>).NODE_ENV = 'development';
       const isDev = process.env.NODE_ENV === 'development';
 
       expect(isDev).toBe(true);
@@ -201,7 +201,7 @@ describe('Environment Variable Validation Tests', () => {
     it('should log environment configuration on startup', () => {
       process.env.JWT_SECRET = '***';
       process.env.CRON_SECRET = '***';
-      process.env.NODE_ENV = 'test';
+      (process.env as Record<string, string>).NODE_ENV = 'test';
 
       const config = {
         jwtSecret: process.env.JWT_SECRET ? '***' : undefined,

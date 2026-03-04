@@ -281,8 +281,8 @@ describe('RSS Worker Tests', () => {
     });
 
     it('should reject invalid CRON_SECRET', () => {
-      const incomingSecret = 'wrong-secret';
-      const storedSecret = 'correct-secret';
+      const incomingSecret: string = 'wrong-secret';
+      const storedSecret: string = 'correct-secret';
 
       const isValid = incomingSecret === storedSecret;
 

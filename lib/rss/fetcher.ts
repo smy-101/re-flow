@@ -6,6 +6,7 @@ import { eq } from 'drizzle-orm';
 // Extend Item type to include custom fields
 type CustomItem = Item & {
   'content:encoded'?: string;
+  description?: string;
 };
 
 // Types
@@ -52,7 +53,7 @@ export async function parseRSS(feedUrl: string): Promise<{
           customItem['content:encoded'] ||
           item.content ||
           item.contentSnippet ||
-          item.description ||
+          customItem.description ||
           '';
 
         // Parse published date

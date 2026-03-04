@@ -70,11 +70,7 @@ export function createMockRequest(options: {
  */
 export function createMockCookieStore(
   initialCookies: Record<string, string> = {}
-): {
-  get: ReturnType<typeof vi.fn>;
-  set: ReturnType<typeof vi.fn>;
-  delete: ReturnType<typeof vi.fn>;
-} {
+) {
   const store = {
     _cookies: new Map(Object.entries(initialCookies)),
 
@@ -119,7 +115,6 @@ export function createAuthenticatedRequest(
   return createMockRequest({
     ...options,
     headers: {
-      ...options.headers,
       Cookie: `token=${mockToken}`,
     },
   });
@@ -145,25 +140,29 @@ export function mockJWT(options: {
   userId: number | null;
   token?: string;
 } = { userId: 1 }) {
-  const { userId, token } = options;
+  const { userId } = options;
+
+  const signToken = vi.fn(async (id: number) => `mock-jwt-token-${id}`);
+  const verifyToken = vi.fn(async () => {
+    if (userId === null) return null;
+    return {
+      sub: String(userId),
+      iat: Math.floor(Date.now() / 1000),
+      exp: Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60,
+    };
+  });
+  const getUserIdFromToken = vi.fn(async () => userId);
 
   vi.doMock('@/lib/auth/jwt', () => ({
-    signToken: vi.fn(async (id: number) => `mock-jwt-token-${id}`),
-    verifyToken: vi.fn(async () => {
-      if (userId === null) return null;
-      return {
-        sub: String(userId),
-        iat: Math.floor(Date.now() / 1000),
-        exp: Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60,
-      };
-    }),
-    getUserIdFromToken: vi.fn(async () => userId),
+    signToken,
+    verifyToken,
+    getUserIdFromToken,
   }));
 
   return {
-    signToken: vi.requireMock('@/lib/auth/jwt').signToken,
-    verifyToken: vi.requireMock('@/lib/auth/jwt').verifyToken,
-    getUserIdFromToken: vi.requireMock('@/lib/auth/jwt').getUserIdFromToken,
+    signToken,
+    verifyToken,
+    getUserIdFromToken,
   };
 }
 
@@ -324,11 +323,7 @@ export function resetFetchMocks() {
  * vi.mocked(db.query.feeds.findMany).mockResolvedValue(createMockQueryResult(mockFeeds));
  * ```
  */
-export function createMockQueryResult<T>(data: T[]): {
-  findMany: ReturnType<typeof vi.fn>;
-  findFirst: ReturnType<typeof vi.fn>;
-  findById: ReturnType<typeof vi.fn>;
-} {
+export function createMockQueryResult<T>(data: T[]) {
   return {
     findMany: vi.fn().mockResolvedValue(data),
     findFirst: vi.fn().mockResolvedValue(data[0] || null),
@@ -350,10 +345,7 @@ export function createMockQueryResult<T>(data: T[]): {
  * vi.mocked(db.insert).mockReturnValue(createMockInsertResult([newFeed]));
  * ```
  */
-export function createMockInsertResult<T>(data: T[]): {
-  values: ReturnType<typeof vi.fn>;
-  returning: ReturnType<typeof vi.fn>;
-} {
+export function createMockInsertResult<T>(data: T[]) {
   let mockValues = {};
   const insertChain = {
     values: vi.fn(function(this: any, values: any) {

@@ -143,7 +143,7 @@ describe('Error Handling Tests', () => {
 
   describe('9.8 Resource Not Found (404)', () => {
     it('should handle non-existent feed gracefully', async () => {
-      vi.mocked(db.query.feeds.findFirst).mockResolvedValueOnce(null);
+      vi.mocked(db.query.feeds.findFirst).mockResolvedValueOnce(null as never);
 
       const feed = await db.query.feeds.findFirst();
       expect(feed).toBeNull();
@@ -182,7 +182,7 @@ describe('Error Handling Tests', () => {
 
       // Simulate waiting for retry-after
       const startTime = Date.now();
-      await new Promise(resolve => setTimeout(resolve, 10)); // Short wait for test
+      await new Promise(resolve => setTimeout(resolve, 20)); // Short wait for test
       const elapsedTime = Date.now() - startTime;
 
       expect(elapsedTime).toBeGreaterThanOrEqual(10);
@@ -193,10 +193,9 @@ describe('Error Handling Tests', () => {
     it('should not retry on 404 errors', async () => {
       let attemptCount = 0;
 
-      vi.mocked(db.query.feeds.findFirst).mockImplementation(async () => {
-        attemptCount++;
-        return null; // Simulate 404 (not found)
-      });
+      vi.mocked(db.query.feeds.findFirst).mockImplementation(
+        (async () => { attemptCount++; return null; }) as never
+      );
 
       // Make multiple calls
       await db.query.feeds.findFirst();
@@ -234,9 +233,9 @@ describe('Error Handling Tests', () => {
       let cleanupCalled = false;
       let connection: any = { closed: false };
 
-      vi.mocked(db.query.feeds.findMany).mockImplementation(async () => {
-        throw new Error('Database error');
-      });
+      vi.mocked(db.query.feeds.findMany).mockImplementation(
+        (async () => { throw new Error('Database error'); }) as never
+      );
 
       try {
         await db.query.feeds.findMany();

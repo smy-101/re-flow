@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, it, expect, beforeAll, vi } from 'vitest';
 import { signToken, verifyToken, getUserIdFromToken } from '@/lib/auth/jwt';
 

@@ -36,7 +36,7 @@ describe('lib/api/items', () => {
     });
 
     it('should pass query parameters as URL search params', async () => {
-      const mockItems = [];
+      const mockItems: never[] = [];
       mockFetch.mockResolvedValueOnce({
         ok: true,
         json: async () => mockItems,

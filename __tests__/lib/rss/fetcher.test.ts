@@ -615,7 +615,7 @@ describe('RSS Fetcher', () => {
           },
         ];
 
-        vi.mocked(db.query.feeds.findFirst).mockResolvedValue(null);
+        vi.mocked(db.query.feeds.findFirst).mockResolvedValue(null as never);
 
         await expect(storeItems(1, 1, items)).rejects.toThrow('Failed to store items');
       });
@@ -843,7 +843,7 @@ describe('RSS Fetcher', () => {
 
         mockParseURL.mockResolvedValue({ items, title: 'Test Feed' });
         vi.mocked(db.query.feedItems.findMany).mockResolvedValue([]);
-        vi.mocked(db.query.feeds.findFirst).mockResolvedValue(null);
+        vi.mocked(db.query.feeds.findFirst).mockResolvedValue(null as never);
 
         const result = await fetchAndStoreItems(1, 1, 'https://example.com/feed.xml');
 

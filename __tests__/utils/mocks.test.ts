@@ -39,11 +39,11 @@ describe('Mock Helper Functions', () => {
       expect(request.url).toBe('http://localhost:3000/api/feeds');
     });
 
-    it('should create request with JSON body', () => {
+    it('should create request with JSON body', async () => {
       const body = { feedUrl: 'https://example.com/feed.xml' };
       const request = createMockRequest({ method: 'POST', body });
 
-      expect(request.json()).resolves.toEqual(body);
+      await expect(request.json()).resolves.toEqual(body);
     });
 
     it('should create request with custom headers', () => {

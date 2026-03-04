@@ -34,7 +34,7 @@ describe('getAuthenticatedUser', () => {
         }
         return null;
       }),
-    } as ReturnType<typeof cookies>);
+    } as unknown as Awaited<ReturnType<typeof cookies>>);
 
     const result = await getAuthenticatedUser();
 
@@ -46,7 +46,7 @@ describe('getAuthenticatedUser', () => {
   it('should return 401 response when token is missing', async () => {
     vi.mocked(cookies).mockResolvedValue({
       get: vi.fn(() => null),
-    } as ReturnType<typeof cookies>);
+    } as unknown as Awaited<ReturnType<typeof cookies>>);
 
     const result = await getAuthenticatedUser();
 
@@ -68,7 +68,7 @@ describe('getAuthenticatedUser', () => {
         }
         return null;
       }),
-    } as ReturnType<typeof cookies>);
+    } as unknown as Awaited<ReturnType<typeof cookies>>);
 
     const result = await getAuthenticatedUser();
 
@@ -90,7 +90,7 @@ describe('getAuthenticatedUser', () => {
         }
         return null;
       }),
-    } as ReturnType<typeof cookies>);
+    } as unknown as Awaited<ReturnType<typeof cookies>>);
 
     const result = await getAuthenticatedUser();
 
