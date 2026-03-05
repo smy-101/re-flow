@@ -132,43 +132,33 @@ export function getPresetProvider(providerId: string): PresetProvider | undefine
  * Creates a Vercel AI SDK LanguageModel from an AI configuration
  * @param config - The AI configuration
  * @returns A LanguageModel instance
+ *
+ * Note: Model parameters (temperature, maxTokens, etc.) should be passed to
+ * generation functions (e.g., generateText()) as options, not during model creation.
  */
 export function createModelFromConfig(config: AIConfigInput): LanguageModel {
-  const { apiFormat, baseURL, apiKey, model } = config;
+  const { apiFormat, providerType, baseURL, apiKey, model } = config;
 
   if (apiFormat === 'openai') {
+    // Use Responses API for official OpenAI, Chat Completions API for compatible providers
+    // The difference is in which provider method we call
     const provider = createOpenAI({
       baseURL,
       apiKey,
     });
 
-    const settings: Record<string, unknown> = {};
-
-    // Add optional model parameters
-    if (config.modelParams) {
-      if (config.modelParams.temperature !== undefined) {
-        settings.temperature = config.modelParams.temperature;
-      }
-      if (config.modelParams.maxTokens !== undefined) {
-        settings.maxTokens = config.modelParams.maxTokens;
-      }
-      if (config.modelParams.topP !== undefined) {
-        settings.topP = config.modelParams.topP;
-      }
-      if (config.modelParams.frequencyPenalty !== undefined) {
-        settings.frequencyPenalty = config.modelParams.frequencyPenalty;
-      }
-      if (config.modelParams.presencePenalty !== undefined) {
-        settings.presencePenalty = config.modelParams.presencePenalty;
-      }
+    // OpenAI official: Use default call (Responses API: /v1/responses)
+    // OpenAI-compatible or custom: Use .chat() method (Chat Completions API: /v1/chat/completions)
+    if (providerType === 'openai') {
+      // Official OpenAI: Use default call
+      return (provider as ProviderModelFunction)(model);
+    } else {
+      // OpenAI-compatible or custom: Use .chat() method
+      const openAIProvider = provider as unknown as {
+        chat: (modelId: string) => LanguageModel;
+      };
+      return openAIProvider.chat(model);
     }
-
-    // Add extra parameters if provided
-    if (config.extraParams) {
-      Object.assign(settings, config.extraParams);
-    }
-
-    return (provider as ProviderModelFunction)(model, settings);
   }
 
   if (apiFormat === 'anthropic') {
@@ -177,27 +167,7 @@ export function createModelFromConfig(config: AIConfigInput): LanguageModel {
       apiKey,
     });
 
-    const settings: Record<string, unknown> = {};
-
-    // Add optional model parameters (Anthropic has different parameters)
-    if (config.modelParams) {
-      if (config.modelParams.temperature !== undefined) {
-        settings.temperature = config.modelParams.temperature;
-      }
-      if (config.modelParams.maxTokens !== undefined) {
-        settings.maxTokens = config.modelParams.maxTokens;
-      }
-      if (config.modelParams.topP !== undefined) {
-        settings.topP = config.modelParams.topP;
-      }
-    }
-
-    // Add extra parameters if provided (but exclude customModelId)
-    if (config.extraParams) {
-      Object.assign(settings, config.extraParams);
-    }
-
-    return (provider as ProviderModelFunction)(model, settings);
+    return (provider as ProviderModelFunction)(model);
   }
 
   throw new Error(`Unsupported API format: ${apiFormat}`);
