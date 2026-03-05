@@ -190,7 +190,7 @@ export function AIConfigList({
       )}
 
       {/* Config list */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2">
         {configs.map((config) => (
           <AIConfigCard
             key={config.id}
