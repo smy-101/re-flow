@@ -76,10 +76,56 @@ export const feedItems = sqliteTable(
 export type FeedItem = typeof feedItems.$inferSelect;
 export type NewFeedItem = typeof feedItems.$inferInsert;
 
+export const aiConfigs = sqliteTable(
+  'ai_configs',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    userId: integer('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    name: text('name').notNull(),
+    providerType: text('provider_type').notNull(), // 'openai' | 'anthropic' | 'openai-compatible' | 'anthropic-compatible' | 'custom'
+    providerId: text('provider_id'), // Preset provider ID, e.g., 'deepseek', 'qwen'
+    apiFormat: text('api_format').notNull(), // 'openai' | 'anthropic'
+    baseURL: text('base_url').notNull(),
+    apiKeyEncrypted: text('api_key_encrypted').notNull(),
+    apiKeyIv: text('api_key_iv').notNull(),
+    apiKeyTag: text('api_key_tag').notNull(),
+    model: text('model').notNull(),
+    systemPrompt: text('system_prompt'),
+    modelParams: text('model_params'), // JSON string for model parameters
+    isDefault: integer('is_default', { mode: 'boolean' })
+      .notNull()
+      .default(false),
+    isEnabled: integer('is_enabled', { mode: 'boolean' })
+      .notNull()
+      .default(true),
+    healthStatus: text('health_status')
+      .notNull()
+      .default('unverified'), // 'unverified' | 'active' | 'error'
+    lastError: text('last_error'),
+    lastErrorAt: integer('last_error_at'),
+    extraParams: text('extra_params'), // JSON string for extra parameters
+    createdAt: integer('created_at')
+      .notNull()
+      .default(sql`(strftime('%s', 'now'))`),
+    updatedAt: integer('updated_at')
+      .notNull()
+      .default(sql`(strftime('%s', 'now'))`),
+  },
+  (table) => ({
+    userIdIdx: index('ai_configs_user_id_idx').on(table.userId),
+  }),
+);
+
+export type AIConfig = typeof aiConfigs.$inferSelect;
+export type NewAIConfig = typeof aiConfigs.$inferInsert;
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   feeds: many(feeds),
   feedItems: many(feedItems),
+  aiConfigs: many(aiConfigs),
 }));
 
 export const feedsRelations = relations(feeds, ({ one, many }) => ({
@@ -97,6 +143,13 @@ export const feedItemsRelations = relations(feedItems, ({ one }) => ({
   }),
   user: one(users, {
     fields: [feedItems.userId],
+    references: [users.id],
+  }),
+}));
+
+export const aiConfigsRelations = relations(aiConfigs, ({ one }) => ({
+  user: one(users, {
+    fields: [aiConfigs.userId],
     references: [users.id],
   }),
 }));

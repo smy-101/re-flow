@@ -1,4 +1,4 @@
-import { type LucideIcon, Folder, BookOpen, Pin, Bot, ArrowRightLeft } from 'lucide-react';
+import { type LucideIcon, Folder, BookOpen, Pin, Settings, ArrowRightLeft } from 'lucide-react';
 
 export type NavigationItemId = 'feeds' | 'items' | 'favorites' | 'ai' | 'relay';
 
@@ -32,10 +32,9 @@ export const navigationItems: NavigationItem[] = [
   },
   {
     id: 'ai',
-    label: 'AI 助手',
-    href: '/ai',
-    icon: Bot,
-    disabled: true, // 未来功能
+    label: 'AI 设置',
+    href: '/settings/ai',
+    icon: Settings,
   },
   {
     id: 'relay',
