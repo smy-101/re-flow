@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { NextResponse } from 'next/server';
 import { getAuthenticatedUser } from '@/lib/auth/auth-helper';
 import * as jwt from '@/lib/auth/jwt';
@@ -16,11 +16,17 @@ vi.mock('@/lib/auth/jwt', () => ({
 
 describe('getAuthenticatedUser', () => {
   let mockGetUserIdFromToken: ReturnType<typeof vi.fn>;
+  let consoleErrorSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
     // Reset mocks before each test
     vi.clearAllMocks();
     mockGetUserIdFromToken = jwt.getUserIdFromToken as ReturnType<typeof vi.fn>;
+    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    consoleErrorSpy.mockRestore();
   });
 
   it('should return user ID when valid token is provided', async () => {

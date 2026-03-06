@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { db } from '@/lib/db';
 import { feeds, feedItems } from '@/lib/db/schema';
 import { fetchAndStoreItems } from '@/lib/rss/fetcher';
@@ -29,8 +29,16 @@ vi.mock('rss-parser', () => ({
 }));
 
 describe('Error Handling Tests', () => {
+  let consoleErrorSpy: ReturnType<typeof vi.spyOn>;
+
   beforeEach(() => {
     vi.clearAllMocks();
+    // Error-path tests intentionally trigger exceptions; silence expected logs.
+    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    consoleErrorSpy.mockRestore();
   });
 
   describe('9.2 Network Errors', () => {
@@ -231,7 +239,7 @@ describe('Error Handling Tests', () => {
   describe('9.12 Resource Cleanup', () => {
     it('should handle error cleanup conceptually', async () => {
       let cleanupCalled = false;
-      let connection: any = { closed: false };
+      const connection: any = { closed: false };
 
       vi.mocked(db.query.feeds.findMany).mockImplementation(
         (async () => { throw new Error('Database error'); }) as never

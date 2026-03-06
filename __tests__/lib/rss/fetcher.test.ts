@@ -38,6 +38,7 @@ vi.mock('@/lib/db', () => ({
 describe('RSS Fetcher', () => {
   let mockParser: ReturnType<typeof vi.fn>;
   let mockParseURL: ReturnType<typeof vi.fn>;
+  let consoleErrorSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
     // Setup parser mock
@@ -52,9 +53,12 @@ describe('RSS Fetcher', () => {
 
     // Clear all mocks
     vi.clearAllMocks();
+    // Many tests validate failure branches that call console.error internally.
+    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
   });
 
   afterEach(() => {
+    consoleErrorSpy.mockRestore();
     vi.restoreAllMocks();
   });
 
