@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { aiConfigs } from '@/lib/db/schema';
+import { aiConfigs, craftTemplates } from '@/lib/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { getAuthenticatedUser } from '@/lib/auth/auth-helper';
 import { encrypt } from '@/lib/auth/encryption';
@@ -189,6 +189,25 @@ export async function DELETE(
 
     if (!existingConfig) {
       return NextResponse.json({ error: '配置不存在' }, { status: 404 });
+    }
+
+    // Check if there are any craft templates associated with this config
+    const associatedTemplates = await db.query.craftTemplates.findMany({
+      where: eq(craftTemplates.aiConfigId, configId),
+      columns: {
+        id: true,
+        name: true,
+      },
+    });
+
+    if (associatedTemplates.length > 0) {
+      return NextResponse.json(
+        {
+          error: `无法删除：该 AI 配置被 ${associatedTemplates.length} 个工艺模板使用`,
+          templates: associatedTemplates,
+        },
+        { status: 400 },
+      );
     }
 
     // Delete config

@@ -121,11 +121,42 @@ export const aiConfigs = sqliteTable(
 export type AIConfig = typeof aiConfigs.$inferSelect;
 export type NewAIConfig = typeof aiConfigs.$inferInsert;
 
+export const craftTemplates = sqliteTable(
+  'craft_templates',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    userId: integer('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    name: text('name').notNull(),
+    description: text('description'),
+    aiConfigId: integer('ai_config_id')
+      .notNull()
+      .references(() => aiConfigs.id, { onDelete: 'restrict' }),
+    promptTemplate: text('prompt_template').notNull(),
+    category: text('category').notNull().default('custom'), // 'summarize' | 'translate' | 'filter' | 'analyze' | 'rewrite' | 'custom'
+    createdAt: integer('created_at')
+      .notNull()
+      .default(sql`(strftime('%s', 'now'))`),
+    updatedAt: integer('updated_at')
+      .notNull()
+      .default(sql`(strftime('%s', 'now'))`),
+  },
+  (table) => ({
+    userIdIdx: index('craft_templates_user_id_idx').on(table.userId),
+    categoryIdx: index('craft_templates_category_idx').on(table.category),
+  }),
+);
+
+export type CraftTemplate = typeof craftTemplates.$inferSelect;
+export type NewCraftTemplate = typeof craftTemplates.$inferInsert;
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   feeds: many(feeds),
   feedItems: many(feedItems),
   aiConfigs: many(aiConfigs),
+  craftTemplates: many(craftTemplates),
 }));
 
 export const feedsRelations = relations(feeds, ({ one, many }) => ({
@@ -147,9 +178,21 @@ export const feedItemsRelations = relations(feedItems, ({ one }) => ({
   }),
 }));
 
-export const aiConfigsRelations = relations(aiConfigs, ({ one }) => ({
+export const aiConfigsRelations = relations(aiConfigs, ({ one, many }) => ({
   user: one(users, {
     fields: [aiConfigs.userId],
     references: [users.id],
+  }),
+  craftTemplates: many(craftTemplates),
+}));
+
+export const craftTemplatesRelations = relations(craftTemplates, ({ one }) => ({
+  user: one(users, {
+    fields: [craftTemplates.userId],
+    references: [users.id],
+  }),
+  aiConfig: one(aiConfigs, {
+    fields: [craftTemplates.aiConfigId],
+    references: [aiConfigs.id],
   }),
 }));
