@@ -2,11 +2,12 @@ schema: spec-driven
 
 # =============================================================================
 # re-flow — OpenSpec 项目配置
-# 采用 SDD（Spec-Driven Development）模式：先规格后编码
+# 采用 SDD + TDD（Spec-Driven Development + Test-Driven Development）模式：
+# 先规格，再先测后码
 #
-# SDD 开发流程：
+# SDD/TDD 开发流程：
 #   1. /opsx:propose <change-name>  — 生成 proposal / specs / design / tasks
-#   2. /opsx:apply                  — 按 tasks 逐条实现代码
+#   2. /opsx:apply                  — 按 tasks 执行 TDD（先写测试→验证失败→实现功能→回归通过）
 #   3. /opsx:archive                — 归档已完成的 change，更新 specs
 # =============================================================================
 
@@ -48,6 +49,7 @@ context: |
     - openspec/specs/  — 已归档规格（提案时优先引用，避免重复定义）
 
   提交规范：Conventional Commits（feat / fix / chore / docs / refactor）
+  开发策略：默认采用 TDD（Red-Green-Refactor），所有需要单元测试/测试用例的变更必须先写测试再写实现
   样式规范：Tailwind CSS utility-first，避免自定义 CSS，优先使用 CSS 变量
   组件规范：函数式组件 + React Hooks，禁止 class 组件
 
@@ -86,14 +88,28 @@ rules:
     - 文档语言必须为简体中文（zh-CN），仅技术术语可保留英文
     - 每个任务粒度不超过 2 小时
     - 任务格式：`- [ ] <动作动词> <目标文件或模块>`
-    - 按"基础设施 → 核心逻辑 → UI → 测试 → 类型检查"顺序排列
+    - 按"基础设施 → 测试用例（先写）→ 核心逻辑/UI 实现 → 回归测试 → 类型检查"顺序排列
+    - TDD 强制规则（适用于所有需要写单元测试或测试用例的任务）：
+      - 必须先新增/修改测试用例，再进行功能实现（禁止先写功能后补测试）
+      - 必须先执行一次相关测试并确认失败（Red），再开始实现
+      - 实现完成后必须重新执行同一批相关测试并确认全部通过（Green）
+      - 可在通过后进行小步重构（Refactor），且每次重构后都需再次通过相关测试
     - 测试分层策略（按代码层级决定测试方式，不得混淆）：
       【自动化测试层】以下层级必须编写 Vitest 单元测试，change 涉及时必须包含测试任务：
         - lib/auth/、lib/rss/、lib/db/queries/、lib/api/ — 纯逻辑，无渲染依赖，AI 可准确编写
+        - 任务顺序必须体现"先测试后实现"，示例：
+          - `- [ ] 编写 <相关模块> 失败用例（Red）`
+          - `- [ ] 实现 <相关模块> 功能使测试通过（Green）`
+          - `- [ ] 重构 <相关模块> 并保持测试通过（Refactor，可选）`
       【手工测试层】以下层级禁止编写自动化测试，改为手工验证：
         - components/ — RTL 测试与组件实现细节耦合过深，mock 维护成本高，准确率低
         - app/(dashboard)/ 及所有页面文件 — Next.js Server Components 无法在 jsdom 中可靠运行
           jsdom 环境下测试页面路由层 mock 代价远超价值，测试结果可信度低
+        - 涉及手工测试层时，仍需先写"测试用例/验收场景"任务，再进行实现
+        - 推荐任务顺序：
+          - `- [ ] 编写手工测试用例 <页面或组件>：<Given/When/Then 验收场景>`
+          - `- [ ] 实现 <页面或组件> 功能`
+          - `- [ ] 手工验证 <页面或组件>：<验证项描述>`
         - 手工测试任务格式：`- [ ] 手工验证 <页面或组件>：<验证项描述>`
     - 必须包含 ESLint 执行任务：`- [ ] 运行 pnpm lint 并确认无 error（无新增 warning）`
     - 不得通过新增 `eslint-disable` / `eslint-disable-next-line` / `@ts-ignore` 绕过校验（除非在任务中明确说明原因与范围）
@@ -102,6 +118,9 @@ rules:
       - 示例：`pnpm test __tests__/lib/rss/` 或 `pnpm test AddFeedForm`
       - 禁止使用 `.skip` / `test.skip` / `it.skip` / `describe.skip` 跳过任何用例
       - 所有被执行的测试必须 100% 通过，无失败、无报错
+      - TDD 执行必须在 tasks 中体现两次测试运行：
+        - `- [ ] 运行 pnpm test <相关测试路径> 并确认新用例先失败（Red）`
+        - `- [ ] 运行 pnpm test <相关测试路径> 并确认全部通过（Green）`
     - 涉及自动化测试层时，必须包含测试执行任务：`- [ ] 运行 pnpm test <相关测试路径> 并确认全部通过`
     - 最后一个任务必须是：`- [ ] 运行 pnpm exec tsc --noEmit 确认零类型错误`
       TypeScript 类型检查执行规范（严格执行，不得绕过）：
