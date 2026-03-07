@@ -151,12 +151,45 @@ export const craftTemplates = sqliteTable(
 export type CraftTemplate = typeof craftTemplates.$inferSelect;
 export type NewCraftTemplate = typeof craftTemplates.$inferInsert;
 
+export const pipelines = sqliteTable(
+  'pipelines',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    userId: integer('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    name: text('name').notNull(),
+    description: text('description'),
+    steps: text('steps').notNull(), // JSON array: [{ templateId: number, order: number, name: string }]
+    createdAt: integer('created_at')
+      .notNull()
+      .default(sql`(strftime('%s', 'now'))`),
+    updatedAt: integer('updated_at')
+      .notNull()
+      .default(sql`(strftime('%s', 'now'))`),
+  },
+  (table) => ({
+    userIdIdx: index('pipelines_user_id_idx').on(table.userId),
+  }),
+);
+
+export type Pipeline = typeof pipelines.$inferSelect;
+export type NewPipeline = typeof pipelines.$inferInsert;
+
+// Step type for pipeline steps JSON
+export interface PipelineStep {
+  templateId: number;
+  order: number;
+  name: string;
+}
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   feeds: many(feeds),
   feedItems: many(feedItems),
   aiConfigs: many(aiConfigs),
   craftTemplates: many(craftTemplates),
+  pipelines: many(pipelines),
 }));
 
 export const feedsRelations = relations(feeds, ({ one, many }) => ({
@@ -194,5 +227,12 @@ export const craftTemplatesRelations = relations(craftTemplates, ({ one }) => ({
   aiConfig: one(aiConfigs, {
     fields: [craftTemplates.aiConfigId],
     references: [aiConfigs.id],
+  }),
+}));
+
+export const pipelinesRelations = relations(pipelines, ({ one }) => ({
+  user: one(users, {
+    fields: [pipelines.userId],
+    references: [users.id],
   }),
 }));
