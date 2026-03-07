@@ -183,6 +183,52 @@ export interface PipelineStep {
   name: string;
 }
 
+export const processingResults = sqliteTable(
+  'processing_results',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    userId: integer('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    feedItemId: integer('feed_item_id')
+      .notNull()
+      .references(() => feedItems.id, { onDelete: 'cascade' }),
+    pipelineId: integer('pipeline_id').references(() => pipelines.id, {
+      onDelete: 'set null',
+    }),
+    templateId: integer('template_id').references(() => craftTemplates.id, {
+      onDelete: 'set null',
+    }),
+    output: text('output'),
+    stepsOutput: text('steps_output'), // JSON array: [{ step: number, templateId: number, output: string, tokensUsed: number }]
+    status: text('status').notNull().default('pending'), // 'pending' | 'processing' | 'done' | 'error'
+    errorMessage: text('error_message'),
+    tokensUsed: integer('tokens_used'),
+    createdAt: integer('created_at')
+      .notNull()
+      .default(sql`(strftime('%s', 'now'))`),
+    completedAt: integer('completed_at'),
+  },
+  (table) => ({
+    userIdIdx: index('processing_results_user_id_idx').on(table.userId),
+    feedItemIdIdx: index('processing_results_feed_item_id_idx').on(
+      table.feedItemId,
+    ),
+    statusIdx: index('processing_results_status_idx').on(table.status),
+  }),
+);
+
+export type ProcessingResult = typeof processingResults.$inferSelect;
+export type NewProcessingResult = typeof processingResults.$inferInsert;
+
+// Step output type for pipeline steps output JSON
+export interface StepOutput {
+  step: number;
+  templateId: number;
+  output: string;
+  tokensUsed: number;
+}
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   feeds: many(feeds),
@@ -190,6 +236,7 @@ export const usersRelations = relations(users, ({ many }) => ({
   aiConfigs: many(aiConfigs),
   craftTemplates: many(craftTemplates),
   pipelines: many(pipelines),
+  processingResults: many(processingResults),
 }));
 
 export const feedsRelations = relations(feeds, ({ one, many }) => ({
@@ -200,7 +247,7 @@ export const feedsRelations = relations(feeds, ({ one, many }) => ({
   items: many(feedItems),
 }));
 
-export const feedItemsRelations = relations(feedItems, ({ one }) => ({
+export const feedItemsRelations = relations(feedItems, ({ one, many }) => ({
   feed: one(feeds, {
     fields: [feedItems.feedId],
     references: [feeds.id],
@@ -209,6 +256,7 @@ export const feedItemsRelations = relations(feedItems, ({ one }) => ({
     fields: [feedItems.userId],
     references: [users.id],
   }),
+  processingResults: many(processingResults),
 }));
 
 export const aiConfigsRelations = relations(aiConfigs, ({ one, many }) => ({
@@ -230,9 +278,32 @@ export const craftTemplatesRelations = relations(craftTemplates, ({ one }) => ({
   }),
 }));
 
-export const pipelinesRelations = relations(pipelines, ({ one }) => ({
+export const pipelinesRelations = relations(pipelines, ({ one, many }) => ({
   user: one(users, {
     fields: [pipelines.userId],
     references: [users.id],
   }),
+  processingResults: many(processingResults),
 }));
+
+export const processingResultsRelations = relations(
+  processingResults,
+  ({ one }) => ({
+    user: one(users, {
+      fields: [processingResults.userId],
+      references: [users.id],
+    }),
+    feedItem: one(feedItems, {
+      fields: [processingResults.feedItemId],
+      references: [feedItems.id],
+    }),
+    pipeline: one(pipelines, {
+      fields: [processingResults.pipelineId],
+      references: [pipelines.id],
+    }),
+    template: one(craftTemplates, {
+      fields: [processingResults.templateId],
+      references: [craftTemplates.id],
+    }),
+  }),
+);
