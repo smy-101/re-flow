@@ -11,6 +11,11 @@ import {
   createMockInsertResult,
 } from './mocks';
 
+type MockFeed = {
+  id: number;
+  title: string;
+};
+
 // Mock next/headers for createMockCookieStore tests
 vi.mock('next/headers', () => ({
   cookies: vi.fn(),
@@ -280,7 +285,7 @@ describe('Mock Helper Functions', () => {
       const mockFeeds = [
         { id: 1, title: 'Feed 1' },
         { id: 2, title: 'Feed 2' },
-      ] as unknown as Awaited<ReturnType<typeof db.query.feeds.findMany>>;
+      ] as MockFeed[];
       const mockResult = createMockQueryResult(mockFeeds);
 
       expect(mockResult.findMany).toBeDefined();
@@ -289,7 +294,7 @@ describe('Mock Helper Functions', () => {
     });
 
     it('should return all items from findMany', async () => {
-      const mockFeeds = [{ id: 1, title: 'Feed 1' }] as unknown as Awaited<ReturnType<typeof db.query.feeds.findMany>>;
+      const mockFeeds = [{ id: 1, title: 'Feed 1' }] as MockFeed[];
       const mockResult = createMockQueryResult(mockFeeds);
 
       const result = await mockResult.findMany();
@@ -301,7 +306,7 @@ describe('Mock Helper Functions', () => {
       const mockFeeds = [
         { id: 1, title: 'Feed 1' },
         { id: 2, title: 'Feed 2' },
-      ] as unknown as Awaited<ReturnType<typeof db.query.feeds.findMany>>;
+      ] as MockFeed[];
       const mockResult = createMockQueryResult(mockFeeds);
 
       const result = await mockResult.findFirst();
@@ -321,7 +326,7 @@ describe('Mock Helper Functions', () => {
       const mockFeeds = [
         { id: 1, title: 'Feed 1' },
         { id: 2, title: 'Feed 2' },
-      ] as unknown as Awaited<ReturnType<typeof db.query.feeds.findMany>>;
+      ] as MockFeed[];
       const mockResult = createMockQueryResult(mockFeeds);
 
       const result1 = await mockResult.findById(1);
@@ -336,7 +341,7 @@ describe('Mock Helper Functions', () => {
 
   describe('createMockInsertResult', () => {
     it('should create chainable insert mock', async () => {
-      const newFeed = { id: 1, title: 'New Feed' } as unknown as Awaited<ReturnType<typeof db.insert<typeof feeds>>>;
+      const newFeed = { id: 1, title: 'New Feed' } as MockFeed;
       const mockInsert = createMockInsertResult([newFeed]);
 
       const chain = mockInsert.values({ title: 'New Feed' });

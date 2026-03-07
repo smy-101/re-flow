@@ -36,15 +36,20 @@ context: |
 
   目录约定：
     - app/             — Next.js App Router 页面与布局
-    - app/api/         — RESTful API 路由（auth / feeds / items / categories）
+    - app/api/         — RESTful API 路由（auth / feeds / items / categories / ai-configs / craft-templates）
     - app/(dashboard)/ — 登录后的仪表盘布局与页面
-    - components/      — 可复用 UI 组件（feeds / items / layout / ui）
-    - lib/auth/        — 认证工具（JWT、密码哈希、限流、IP 提取）
+    - app/(dashboard)/settings/ — 设置页面（AI 配置、Craft 模板）
+    - components/      — 可复用 UI 组件（feeds / items / layout / ui / ai / craft）
+    - hooks/           — 自定义 React Hooks（useSidebar / useMobileDrawer）
+    - lib/auth/        — 认证工具（JWT、密码哈希、限流、IP 提取、加密）
     - lib/db/          — Drizzle schema、migrations、queries
     - lib/rss/         — RSS 拉取与解析逻辑（fetcher.ts）
     - lib/api/         — 前端 API 调用封装（类型安全 fetch wrapper）
+    - lib/ai/          — AI 提供者逻辑（providers.ts、test.ts）
+    - lib/craft-templates/ — Craft 模板预设
+    - lib/config/      — 配置文件（navigation.ts）
     - workers/         — 后台 worker 进程（rss-worker.ts）
-    - __tests__/       — 单元测试（镜像 lib/ 和 app/ 目录结构）
+    - __tests__/       — 单元测试（镜像 lib/ 和 hooks/ 目录结构，包含 utils/ 测试工具）
     - openspec/        — SDD 规格文件（不含业务代码）
     - openspec/specs/  — 已归档规格（提案时优先引用，避免重复定义）
 
@@ -95,8 +100,8 @@ rules:
       - 实现完成后必须重新执行同一批相关测试并确认全部通过（Green）
       - 可在通过后进行小步重构（Refactor），且每次重构后都需再次通过相关测试
     - 测试分层策略（按代码层级决定测试方式，不得混淆）：
-      【自动化测试层】以下层级必须编写 Vitest 单元测试，change 涉及时必须包含测试任务：
-        - lib/auth/、lib/rss/、lib/db/queries/、lib/api/ — 纯逻辑，无渲染依赖，AI 可准确编写
+      【自动化测试层】凡纯逻辑模块（无渲染依赖、可在测试环境稳定执行）必须编写 Vitest 单元测试，change 涉及时必须包含测试任务：
+        - 当前常见目录包括 lib/auth/、lib/rss/、lib/db/queries/、lib/api/、lib/ai/、lib/craft-templates/、hooks/，但不限于以上目录（后续新增同类模块同样适用）
         - 任务顺序必须体现"先测试后实现"，示例：
           - `- [ ] 编写 <相关模块> 失败用例（Red）`
           - `- [ ] 实现 <相关模块> 功能使测试通过（Green）`

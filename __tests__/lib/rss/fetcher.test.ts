@@ -670,7 +670,7 @@ describe('RSS Fetcher', () => {
 
         expect(mockValues).toHaveBeenCalled();
         const valuesCall = mockValues.mock.calls[0] as unknown as [unknown[]];
-        const insertedItem = valuesCall[0][0] as { author: string | null };
+        const insertedItem = valuesCall[0][0] as { author: string | null; readingTime: number };
 
         expect(insertedItem.readingTime).toBeGreaterThan(0);
         expect(typeof insertedItem.readingTime).toBe('number');
