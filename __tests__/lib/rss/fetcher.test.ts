@@ -10,8 +10,7 @@ import {
   type ParsedFeedItem,
 } from '@/lib/rss/fetcher';
 import { db } from '@/lib/db';
-import { eq } from 'drizzle-orm';
-import { feedItems, feeds } from '@/lib/db/schema';
+import { feeds } from '@/lib/db/schema';
 import { createMockFeed } from '@/__tests__/utils/factory';
 
 // Mock rss-parser
@@ -48,7 +47,7 @@ describe('RSS Fetcher', () => {
     mockParser.mockImplementation(function() {
       return {
         parseURL: mockParseURL,
-      } as any;
+      } as unknown as Parser;
     });
 
     // Clear all mocks
@@ -330,7 +329,7 @@ describe('RSS Fetcher', () => {
         vi.mocked(db.query.feedItems.findMany).mockResolvedValue([
           { link: 'https://example.com/2' },
           { link: 'https://example.com/3' },
-        ] as any);
+        ] as unknown as Awaited<ReturnType<typeof db.query.feedItems.findMany>>);
 
         const result = await dedupeItems(items, 1);
 
@@ -369,7 +368,7 @@ describe('RSS Fetcher', () => {
         vi.mocked(db.query.feedItems.findMany).mockResolvedValue([
           { link: 'https://example.com/1' },
           { link: 'https://example.com/2' },
-        ] as any);
+        ] as unknown as Awaited<ReturnType<typeof db.query.feedItems.findMany>>);
 
         const result = await dedupeItems(items, 1);
 
@@ -394,7 +393,7 @@ describe('RSS Fetcher', () => {
           },
         ];
 
-        vi.mocked(db.query.feedItems.findMany).mockResolvedValue([{ link: 'https://example.com/1' }] as any);
+        vi.mocked(db.query.feedItems.findMany).mockResolvedValue([{ link: 'https://example.com/1' }] as unknown as Awaited<ReturnType<typeof db.query.feedItems.findMany>>);
 
         const result = await dedupeItems(items, 1);
 
@@ -593,7 +592,7 @@ describe('RSS Fetcher', () => {
 
         const mockFeed = createMockFeed({ id: 1 });
         vi.mocked(db.query.feeds.findFirst).mockResolvedValue(mockFeed);
-        vi.mocked(db.insert).mockReturnValue({ values: vi.fn().mockReturnThis(), returning: vi.fn().mockResolvedValue([]) } as any);
+        vi.mocked(db.insert).mockReturnValue({ values: vi.fn().mockReturnThis(), returning: vi.fn().mockResolvedValue([]) } as unknown as ReturnType<typeof db.insert>);
 
         const result = await storeItems(1, 1, items);
 
@@ -665,13 +664,13 @@ describe('RSS Fetcher', () => {
           values: mockValues,
           returning: mockReturning,
         });
-        vi.mocked(db.insert).mockImplementation(mockInsert as any);
+        vi.mocked(db.insert).mockImplementation(mockInsert as unknown as typeof db.insert);
 
         await storeItems(1, 1, items);
 
         expect(mockValues).toHaveBeenCalled();
-        const valuesCall = mockValues.mock.calls[0] as any;
-        const insertedItem = valuesCall[0][0];
+        const valuesCall = mockValues.mock.calls[0] as unknown as [unknown[]];
+        const insertedItem = valuesCall[0][0] as { author: string | null };
 
         expect(insertedItem.readingTime).toBeGreaterThan(0);
         expect(typeof insertedItem.readingTime).toBe('number');
@@ -699,12 +698,12 @@ describe('RSS Fetcher', () => {
           values: mockValues,
           returning: mockReturning,
         });
-        vi.mocked(db.insert).mockImplementation(mockInsert as any);
+        vi.mocked(db.insert).mockImplementation(mockInsert as unknown as typeof db.insert);
 
         await storeItems(1, 1, items);
 
-        const valuesCall = mockValues.mock.calls[0] as any;
-        const insertedItem = valuesCall[0][0];
+        const valuesCall = mockValues.mock.calls[0] as unknown as [unknown[]];
+        const insertedItem = valuesCall[0][0] as { author: string | null };
 
         expect(insertedItem.author).toBeNull();
       });
@@ -729,12 +728,12 @@ describe('RSS Fetcher', () => {
           values: mockValues,
           returning: mockReturning,
         });
-        vi.mocked(db.insert).mockImplementation(mockInsert as any);
+        vi.mocked(db.insert).mockImplementation(mockInsert as unknown as typeof db.insert);
 
         await storeItems(1, 1, items);
 
-        const valuesCall = mockValues.mock.calls[0] as any;
-        const insertedItem = valuesCall[0][0];
+        const valuesCall = mockValues.mock.calls[0] as unknown as [unknown[]];
+        const insertedItem = valuesCall[0][0] as { author: string | null };
 
         expect(insertedItem.author).toBe('Test Author');
       });
@@ -769,11 +768,11 @@ describe('RSS Fetcher', () => {
         vi.mocked(db.insert).mockReturnValue({
           values: vi.fn().mockReturnThis(),
           returning: vi.fn().mockResolvedValue([items]),
-        } as any);
+        } as unknown as ReturnType<typeof db.insert>);
         vi.mocked(db.update).mockReturnValue({
           set: vi.fn().mockReturnThis(),
           where: vi.fn().mockReturnThis(),
-        } as any);
+        } as unknown as ReturnType<typeof db.update>);
 
         mockParseURL.mockResolvedValue({ items, title: 'Test Feed' });
 
@@ -788,7 +787,7 @@ describe('RSS Fetcher', () => {
         vi.mocked(db.query.feedItems.findMany).mockResolvedValue([
           { link: 'https://example.com/1' },
           { link: 'https://example.com/2' },
-        ] as any);
+        ] as unknown as Awaited<ReturnType<typeof db.query.feedItems.findMany>>);
         vi.mocked(db.query.feeds.findFirst).mockResolvedValue(mockFeed);
 
         const items: ParsedFeedItem[] = [
@@ -874,7 +873,7 @@ describe('RSS Fetcher', () => {
         vi.mocked(db.insert).mockReturnValue({
           values: vi.fn().mockReturnThis(),
           returning: vi.fn().mockResolvedValue([items]),
-        } as any);
+        } as unknown as ReturnType<typeof db.insert>);
 
         const beforeCall = Math.floor(Date.now() / 1000);
         const mockSet = vi.fn().mockReturnThis();
@@ -883,14 +882,14 @@ describe('RSS Fetcher', () => {
           set: mockSet,
           where: mockWhere,
         });
-        vi.mocked(db.update).mockImplementation(mockUpdate as any);
+        vi.mocked(db.update).mockImplementation(mockUpdate as unknown as typeof db.update);
 
         mockParseURL.mockResolvedValue({ items, title: 'Test Feed' });
 
         await fetchAndStoreItems(1, 1, 'https://example.com/feed.xml');
 
         expect(mockUpdate).toHaveBeenCalledWith(feeds);
-        const setCall = mockSet.mock.calls[0] as any;
+        const setCall = mockSet.mock.calls[0] as unknown as [{ lastUpdatedAt: number }];
         expect(setCall[0].lastUpdatedAt).toBeGreaterThanOrEqual(beforeCall);
       });
     });

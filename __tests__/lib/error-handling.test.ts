@@ -1,7 +1,5 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { db } from '@/lib/db';
-import { feeds, feedItems } from '@/lib/db/schema';
 import { fetchAndStoreItems } from '@/lib/rss/fetcher';
 
 // Mock dependencies
@@ -93,16 +91,16 @@ describe('Error Handling Tests', () => {
       let attempt = 0;
       const maxAttempts = 3;
 
-      const query = async (): Promise<any[]> => {
+      const query = async (): Promise<{ id: number; userId: number }[]> => {
         attempt++;
         if (attempt < 3) {
           throw new Error('Temporary error');
         }
-        return [{ id: 1, userId: 1 }] as any;
+        return [{ id: 1, userId: 1 }];
       };
 
       // Simulate retry mechanism
-      let result: any[] = [];
+      let result: { id: number; userId: number }[] = [];
       let success = false;
 
       for (let i = 0; i < maxAttempts && !success; i++) {
@@ -185,9 +183,6 @@ describe('Error Handling Tests', () => {
     });
 
     it('should handle rate limit by waiting', async () => {
-      const retryAfter = 60;
-      const waitTime = retryAfter * 1000;
-
       // Simulate waiting for retry-after
       const startTime = Date.now();
       await new Promise(resolve => setTimeout(resolve, 20)); // Short wait for test
@@ -239,7 +234,7 @@ describe('Error Handling Tests', () => {
   describe('9.12 Resource Cleanup', () => {
     it('should handle error cleanup conceptually', async () => {
       let cleanupCalled = false;
-      const connection: any = { closed: false };
+      const connection: { closed: boolean } = { closed: false };
 
       vi.mocked(db.query.feeds.findMany).mockImplementation(
         (async () => { throw new Error('Database error'); }) as never
@@ -247,7 +242,7 @@ describe('Error Handling Tests', () => {
 
       try {
         await db.query.feeds.findMany();
-      } catch (error) {
+      } catch {
         // Simulate cleanup that would happen in real code
         connection.closed = true;
         cleanupCalled = true;
@@ -416,7 +411,7 @@ describe('Error Handling Tests', () => {
     });
 
     it('should maintain error context', () => {
-      const error = new Error('Operation failed') as any;
+      const error = new Error('Operation failed') as Error & { code: string; details: { userId: number; feedId: number } };
       error.code = 'OP_FAILED';
       error.details = { userId: 1, feedId: 2 };
 

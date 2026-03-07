@@ -63,7 +63,7 @@ export default function LoginPage() {
 
       // Redirect to home page on successful login
       router.push('/');
-    } catch (error) {
+    } catch {
       setErrors({ form: '网络错误，请稍后重试' });
     } finally {
       setIsLoading(false);

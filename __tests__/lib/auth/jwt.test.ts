@@ -7,54 +7,25 @@ vi.mock('jose', async () => {
   const actual = await vi.importActual('jose');
 
   // Simple JWT implementation for testing
-  const createMockJWT = async (payload: any, secret: string) => {
+  const createMockJWT = async (payload: Record<string, unknown>) => {
     const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
     const payloadEncoded = btoa(JSON.stringify({ ...payload, iat: Math.floor(Date.now() / 1000), exp: Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60 }));
     const signature = 'mock-signature';
     return `${header}.${payloadEncoded}.${signature}`;
   };
 
-  const verifyMockJWT = async (token: string, secret: string) => {
-    try {
-      const parts = token.split('.');
-      if (parts.length !== 3) throw new Error('Invalid token');
-
-      // Check for tampered signature
-      if (parts[2] !== 'mock-signature') {
-        throw new Error('Invalid signature');
-      }
-
-      const payload = JSON.parse(atob(parts[1]));
-
-      // Check for missing required fields
-      if (!payload.sub || !payload.exp || !payload.iat) {
-        return null;
-      }
-
-      // Check for expired token
-      const now = Math.floor(Date.now() / 1000);
-      if (payload.exp < now) {
-        return null;
-      }
-
-      return { payload };
-    } catch {
-      throw new Error('Invalid token');
-    }
-  };
-
   return {
     ...actual,
     SignJWT: class {
-      constructor(private payload: any) {}
-      setProtectedHeader(params: any) { return this; }
+      constructor(private payload: Record<string, unknown>) {}
+      setProtectedHeader(_params: { alg: string; typ: string }) { return this; }
       setIssuedAt() { return this; }
-      setExpirationTime(time: string) { return this; }
-      async sign(secret: string) {
-        return createMockJWT(this.payload, secret);
+      setExpirationTime(_time: string) { return this; }
+      async sign(_secret: string) {
+        return createMockJWT(this.payload);
       }
     },
-    jwtVerify: async (token: string, secret: string) => {
+    jwtVerify: async (token: string, _secret: string) => {
       try {
         const parts = token.split('.');
         if (parts.length !== 3) throw new Error('Invalid token');

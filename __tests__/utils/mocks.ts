@@ -5,7 +5,6 @@
  */
 
 import { NextRequest } from 'next/server';
-import { cookies } from 'next/headers';
 import { vi } from 'vitest';
 
 /**
@@ -230,7 +229,7 @@ export function mockFetchSuccess(
   const responseArray = Array.isArray(responses) ? responses : [responses];
 
   let callCount = 0;
-  vi.mocked(global.fetch).mockImplementation(async (input: RequestInfo | URL) => {
+  vi.mocked(global.fetch).mockImplementation(async (_input: RequestInfo | URL) => {
     const response = responseArray[Math.min(callCount, responseArray.length - 1)];
     callCount++;
 
@@ -328,7 +327,7 @@ export function createMockQueryResult<T>(data: T[]) {
     findMany: vi.fn().mockResolvedValue(data),
     findFirst: vi.fn().mockResolvedValue(data[0] || null),
     findById: vi.fn((id: number) => {
-      const found = data.find((item) => (item as any).id === id);
+      const found = data.find((item) => (item as { id: number }).id === id);
       return Promise.resolve(found || null);
     }),
   };
@@ -346,10 +345,8 @@ export function createMockQueryResult<T>(data: T[]) {
  * ```
  */
 export function createMockInsertResult<T>(data: T[]) {
-  let mockValues = {};
   const insertChain = {
-    values: vi.fn(function(this: any, values: any) {
-      mockValues = values;
+    values: vi.fn(function(this: { values: unknown; returning: unknown }, _values: unknown) {
       return this;
     }),
     returning: vi.fn(function() {
@@ -357,5 +354,8 @@ export function createMockInsertResult<T>(data: T[]) {
     }),
   };
 
-  return insertChain as any;
+  return insertChain as unknown as {
+    values: (values: unknown) => { returning: () => Promise<T[]> };
+    returning: () => Promise<T[]>;
+  };
 }

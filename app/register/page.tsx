@@ -74,7 +74,7 @@ export default function RegisterPage() {
 
       // Redirect to login page on successful registration
       router.push('/login?registered=true');
-    } catch (error) {
+    } catch {
       setErrors({ form: '网络错误，请稍后重试' });
     } finally {
       setIsLoading(false);

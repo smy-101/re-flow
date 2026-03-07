@@ -1,5 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { cookies } from 'next/headers';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import {
   createMockRequest,
   createMockCookieStore,
@@ -164,7 +163,7 @@ describe('Mock Helper Functions', () => {
 
     beforeEach(() => {
       mockFetch = vi.fn();
-      global.fetch = mockFetch as any;
+      global.fetch = mockFetch as unknown as typeof fetch;
     });
 
     afterEach(() => {
@@ -217,7 +216,7 @@ describe('Mock Helper Functions', () => {
 
     beforeEach(() => {
       mockFetch = vi.fn();
-      global.fetch = mockFetch as any;
+      global.fetch = mockFetch as unknown as typeof fetch;
     });
 
     afterEach(() => {
@@ -260,11 +259,11 @@ describe('Mock Helper Functions', () => {
 
     beforeEach(() => {
       mockFetch = vi.fn();
-      global.fetch = mockFetch as any;
+      global.fetch = mockFetch as unknown as typeof fetch;
     });
 
     it('should clear all fetch mocks', () => {
-      mockFetch.mockResolvedValueOnce({ ok: true, json: async () => ({ data: 'test' }) } as any);
+      mockFetch.mockResolvedValueOnce({ ok: true, json: async () => ({ data: 'test' }) } as unknown as Response);
 
       // This doesn't actually call fetch, just sets up the mock
       // So we need to actually test the mock behavior
@@ -281,7 +280,7 @@ describe('Mock Helper Functions', () => {
       const mockFeeds = [
         { id: 1, title: 'Feed 1' },
         { id: 2, title: 'Feed 2' },
-      ] as any[];
+      ] as unknown as Awaited<ReturnType<typeof db.query.feeds.findMany>>;
       const mockResult = createMockQueryResult(mockFeeds);
 
       expect(mockResult.findMany).toBeDefined();
@@ -290,7 +289,7 @@ describe('Mock Helper Functions', () => {
     });
 
     it('should return all items from findMany', async () => {
-      const mockFeeds = [{ id: 1, title: 'Feed 1' }] as any[];
+      const mockFeeds = [{ id: 1, title: 'Feed 1' }] as unknown as Awaited<ReturnType<typeof db.query.feeds.findMany>>;
       const mockResult = createMockQueryResult(mockFeeds);
 
       const result = await mockResult.findMany();
@@ -302,7 +301,7 @@ describe('Mock Helper Functions', () => {
       const mockFeeds = [
         { id: 1, title: 'Feed 1' },
         { id: 2, title: 'Feed 2' },
-      ] as any[];
+      ] as unknown as Awaited<ReturnType<typeof db.query.feeds.findMany>>;
       const mockResult = createMockQueryResult(mockFeeds);
 
       const result = await mockResult.findFirst();
@@ -322,7 +321,7 @@ describe('Mock Helper Functions', () => {
       const mockFeeds = [
         { id: 1, title: 'Feed 1' },
         { id: 2, title: 'Feed 2' },
-      ] as any[];
+      ] as unknown as Awaited<ReturnType<typeof db.query.feeds.findMany>>;
       const mockResult = createMockQueryResult(mockFeeds);
 
       const result1 = await mockResult.findById(1);
@@ -337,7 +336,7 @@ describe('Mock Helper Functions', () => {
 
   describe('createMockInsertResult', () => {
     it('should create chainable insert mock', async () => {
-      const newFeed = { id: 1, title: 'New Feed' } as any;
+      const newFeed = { id: 1, title: 'New Feed' } as unknown as Awaited<ReturnType<typeof db.insert<typeof feeds>>>;
       const mockInsert = createMockInsertResult([newFeed]);
 
       const chain = mockInsert.values({ title: 'New Feed' });

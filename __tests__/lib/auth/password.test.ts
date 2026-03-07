@@ -65,13 +65,13 @@ describe('Password Utilities', () => {
       const password = 'testPassword123';
       const hash = await hashPassword(password);
 
-      await expect(verifyPassword(undefined as any, hash)).rejects.toThrow('data and hash arguments required');
+      await expect(verifyPassword(undefined as unknown as string, hash)).rejects.toThrow('data and hash arguments required');
     });
 
     it('should throw error for undefined hash', async () => {
       const password = 'testPassword123';
 
-      await expect(verifyPassword(password, undefined as any)).rejects.toThrow('data and hash arguments required');
+      await expect(verifyPassword(password, undefined as unknown as string)).rejects.toThrow('data and hash arguments required');
     });
 
     it('should hash 1KB password', async () => {
