@@ -1,6 +1,6 @@
-import { type LucideIcon, Folder, BookOpen, Pin, Settings, ArrowRightLeft } from 'lucide-react';
+import { type LucideIcon, Folder, BookOpen, Pin, Settings, FileText, GitBranch, ArrowRightLeft } from 'lucide-react';
 
-export type NavigationItemId = 'feeds' | 'items' | 'favorites' | 'ai' | 'relay';
+export type NavigationItemId = 'feeds' | 'items' | 'favorites' | 'ai' | 'craft' | 'pipelines' | 'relay';
 
 export interface NavigationItem {
   id: NavigationItemId;
@@ -35,6 +35,18 @@ export const navigationItems: NavigationItem[] = [
     label: 'AI 设置',
     href: '/settings/ai',
     icon: Settings,
+  },
+  {
+    id: 'craft',
+    label: 'Craft 模板',
+    href: '/settings/craft',
+    icon: FileText,
+  },
+  {
+    id: 'pipelines',
+    label: '管道',
+    href: '/settings/pipelines',
+    icon: GitBranch,
   },
   {
     id: 'relay',
