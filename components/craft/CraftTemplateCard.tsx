@@ -63,7 +63,7 @@ export default function CraftTemplateCard({
         <p className="text-gray-600 font-mono text-xs">{promptPreview}</p>
       </div>
       <div className="mt-3 text-xs text-gray-400">
-        创建于: {new Date(template.createdAt).toLocaleString('zh-CN')}
+        创建于: {new Date(template.createdAt * 1000).toLocaleString('zh-CN')}
       </div>
     </div>
   );

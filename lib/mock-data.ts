@@ -140,8 +140,8 @@ function initializeMockData(userId: string): void {
     id: `feed-${index + 1}`,
     userId,
     ...feed,
-    createdAt: now - Math.random() * 90 * 24 * 60 * 60 * 1000, // 0-90 days ago
-    lastUpdatedAt: now - Math.random() * 7 * 24 * 60 * 60 * 1000, // 0-7 days ago
+    createdAt: Math.floor(now / 1000) - Math.random() * 90 * 24 * 60 * 60, // 0-90 days ago (seconds)
+    lastUpdatedAt: Math.floor(now / 1000) - Math.random() * 7 * 24 * 60 * 60, // 0-7 days ago (seconds)
     unreadCount: Math.floor(Math.random() * 20), // 0-19 unread items
   }));
 
@@ -175,7 +175,7 @@ function initializeMockData(userId: string): void {
         .replace('{version}', `${Math.floor(Math.random() * 5) + 1}.${Math.floor(Math.random() * 10)}.${Math.floor(Math.random() * 10)}`);
 
       const isRead = Math.random() > 0.4; // 60% unread
-      const publishedAt = now - (i + 1) * 2 * 60 * 60 * 1000 - Math.random() * 24 * 60 * 60 * 1000;
+      const publishedAt = Math.floor(now / 1000) - (i + 1) * 2 * 60 * 60 - Math.random() * 24 * 60 * 60;
 
       feedItems.push({
         id: `item-${feed.id}-${i + 1}`,
@@ -243,7 +243,7 @@ export async function createFeed(input: CreateFeedInput): Promise<Feed> {
     throw new Error('此订阅已存在');
   }
 
-  const now = Date.now();
+  const now = Math.floor(Date.now() / 1000);
   const newFeed: Feed = {
     id: `feed-${Date.now()}`,
     userId: getCurrentUserId(),
