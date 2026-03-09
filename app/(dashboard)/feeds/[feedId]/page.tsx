@@ -8,6 +8,7 @@ import { fetchFeedById, Feed } from '@/lib/api/feeds';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import Card from '@/components/ui/Card';
 import ItemList from '@/components/items/ItemList';
+import FeedAutoProcessSettings from '@/components/feeds/FeedAutoProcessSettings';
 
 export default function FeedDetailPage() {
   const params = useParams();
@@ -18,6 +19,7 @@ export default function FeedDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<'all' | 'unread' | 'read'>('all');
+  const [showSettings, setShowSettings] = useState(false);
 
   useEffect(() => {
     async function loadFeed() {
@@ -89,8 +91,25 @@ export default function FeedDetailPage() {
                 </a>
               </div>
             </div>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => setShowSettings(!showSettings)}
+            >
+              {showSettings ? '隐藏设置' : '设置'}
+            </Button>
           </div>
         </Card>
+
+        {/* Auto Processing Settings */}
+        {showSettings && (
+          <Card>
+            <FeedAutoProcessSettings
+              feed={feed}
+              onUpdate={(updatedFeed) => setFeed(updatedFeed)}
+            />
+          </Card>
+        )}
       </div>
 
       {/* Filter */}

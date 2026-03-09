@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { feeds } from '@/lib/db/schema';
+import { feeds, pipelines, craftTemplates } from '@/lib/db/schema';
 import { eq, desc } from 'drizzle-orm';
 import { getAuthenticatedUser } from '@/lib/auth/auth-helper';
 import { fetchAndStoreItems } from '@/lib/rss/fetcher';
@@ -50,10 +50,45 @@ export async function POST(request: NextRequest) {
     if (userId instanceof NextResponse) return userId;
 
     const body = await request.json();
-    const { feedUrl, title, category } = body;
+    const { feedUrl, title, category, pipelineId, templateId, autoProcess } = body;
 
     if (!feedUrl || typeof feedUrl !== 'string') {
       return NextResponse.json({ error: 'feedUrl is required' }, { status: 400 });
+    }
+
+    // Validate auto-process configuration
+    if (autoProcess) {
+      if (!pipelineId && !templateId) {
+        return NextResponse.json(
+          { error: '自动处理需要配置管道或模板' },
+          { status: 400 }
+        );
+      }
+      if (pipelineId && templateId) {
+        return NextResponse.json(
+          { error: '管道和模板只能选择其中一个' },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Validate pipeline/template ownership if provided
+    if (pipelineId) {
+      const pipeline = await db.query.pipelines.findFirst({
+        where: eq(pipelines.id, pipelineId),
+      });
+      if (!pipeline || pipeline.userId !== userId) {
+        return NextResponse.json({ error: '管道不存在或无权访问' }, { status: 400 });
+      }
+    }
+
+    if (templateId) {
+      const template = await db.query.craftTemplates.findFirst({
+        where: eq(craftTemplates.id, templateId),
+      });
+      if (!template || template.userId !== userId) {
+        return NextResponse.json({ error: '模板不存在或无权访问' }, { status: 400 });
+      }
     }
 
     // Check if feed already exists for this user
@@ -75,6 +110,9 @@ export async function POST(request: NextRequest) {
         category: category || null,
         siteUrl: extractSiteUrl(feedUrl),
         description: '新添加的订阅',
+        pipelineId: pipelineId || null,
+        templateId: templateId || null,
+        autoProcess: autoProcess ?? false,
       })
       .returning();
 

@@ -61,3 +61,37 @@ The system SHALL handle RSS fetch errors without crashing and return meaningful 
 - **WHEN** network error occurs during RSS fetch
 - **THEN** system returns error message "Network error while fetching feed"
 
+### Requirement: Auto-enqueue new articles
+The system SHALL automatically add new articles to the processing queue when auto-processing is enabled.
+
+#### Scenario: Feed with auto-process enabled
+- **WHEN** RSS fetcher retrieves new articles
+- **AND** corresponding feed has `auto_process` = `true`
+- **AND** feed has `pipeline_id` or `template_id` configured
+- **THEN** system creates queue task for each new article
+- **AND** task status is `pending`
+- **AND** task inherits `pipeline_id` or `template_id` from feed
+
+#### Scenario: Feed with auto-process disabled
+- **WHEN** RSS fetcher retrieves new articles
+- **AND** corresponding feed has `auto_process` = `false`
+- **THEN** system does not create queue tasks
+
+#### Scenario: Feed without processing config
+- **WHEN** RSS fetcher retrieves new articles
+- **AND** feed has `auto_process` = `true`
+- **AND** but both `pipeline_id` and `template_id` are `null`
+- **THEN** system does not create queue tasks
+
+### Requirement: Enqueue error handling
+The system SHALL gracefully handle errors during the enqueue process.
+
+#### Scenario: Enqueue failure does not affect fetching
+- **WHEN** error occurs while creating queue task
+- **THEN** system logs the error
+- **AND** article is still saved to database
+- **AND** fetch process continues normally
+
+#### Scenario: Avoid duplicate queue tasks
+- **WHEN** article already has a queue task with status not `done`
+- **THEN** system does not create duplicate queue task

@@ -26,6 +26,15 @@ export const feeds = sqliteTable(
     siteUrl: text('site_url'),
     description: text('description'),
     category: text('category'),
+    pipelineId: integer('pipeline_id').references(() => pipelines.id, {
+      onDelete: 'set null',
+    }),
+    templateId: integer('template_id').references(() => craftTemplates.id, {
+      onDelete: 'set null',
+    }),
+    autoProcess: integer('auto_process', { mode: 'boolean' })
+      .notNull()
+      .default(false),
     createdAt: integer('created_at')
       .notNull()
       .default(sql`(strftime('%s', 'now'))`),
@@ -229,6 +238,45 @@ export interface StepOutput {
   tokensUsed: number;
 }
 
+export const processingQueue = sqliteTable(
+  'processing_queue',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    userId: integer('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    feedItemId: integer('feed_item_id')
+      .notNull()
+      .references(() => feedItems.id, { onDelete: 'cascade' }),
+    pipelineId: integer('pipeline_id').references(() => pipelines.id, {
+      onDelete: 'set null',
+    }),
+    templateId: integer('template_id').references(() => craftTemplates.id, {
+      onDelete: 'set null',
+    }),
+    status: text('status').notNull().default('pending'), // 'pending' | 'processing' | 'done' | 'error'
+    priority: integer('priority').notNull().default(0),
+    attempts: integer('attempts').notNull().default(0),
+    maxAttempts: integer('max_attempts').notNull().default(3),
+    errorMessage: text('error_message'),
+    createdAt: integer('created_at')
+      .notNull()
+      .default(sql`(strftime('%s', 'now'))`),
+    startedAt: integer('started_at'),
+    completedAt: integer('completed_at'),
+  },
+  (table) => ({
+    userIdIdx: index('processing_queue_user_id_idx').on(table.userId),
+    feedItemIdIdx: index('processing_queue_feed_item_id_idx').on(
+      table.feedItemId,
+    ),
+    statusIdx: index('processing_queue_status_idx').on(table.status),
+  }),
+);
+
+export type ProcessingQueue = typeof processingQueue.$inferSelect;
+export type NewProcessingQueue = typeof processingQueue.$inferInsert;
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   feeds: many(feeds),
@@ -237,12 +285,21 @@ export const usersRelations = relations(users, ({ many }) => ({
   craftTemplates: many(craftTemplates),
   pipelines: many(pipelines),
   processingResults: many(processingResults),
+  processingQueue: many(processingQueue),
 }));
 
 export const feedsRelations = relations(feeds, ({ one, many }) => ({
   user: one(users, {
     fields: [feeds.userId],
     references: [users.id],
+  }),
+  pipeline: one(pipelines, {
+    fields: [feeds.pipelineId],
+    references: [pipelines.id],
+  }),
+  template: one(craftTemplates, {
+    fields: [feeds.templateId],
+    references: [craftTemplates.id],
   }),
   items: many(feedItems),
 }));
@@ -303,6 +360,28 @@ export const processingResultsRelations = relations(
     }),
     template: one(craftTemplates, {
       fields: [processingResults.templateId],
+      references: [craftTemplates.id],
+    }),
+  }),
+);
+
+export const processingQueueRelations = relations(
+  processingQueue,
+  ({ one }) => ({
+    user: one(users, {
+      fields: [processingQueue.userId],
+      references: [users.id],
+    }),
+    feedItem: one(feedItems, {
+      fields: [processingQueue.feedItemId],
+      references: [feedItems.id],
+    }),
+    pipeline: one(pipelines, {
+      fields: [processingQueue.pipelineId],
+      references: [pipelines.id],
+    }),
+    template: one(craftTemplates, {
+      fields: [processingQueue.templateId],
       references: [craftTemplates.id],
     }),
   }),

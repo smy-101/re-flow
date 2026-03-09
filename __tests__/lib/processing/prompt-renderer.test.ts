@@ -16,6 +16,9 @@ const mockFeed: Feed = {
   siteUrl: 'https://example.com',
   description: 'A test feed',
   category: 'tech',
+  pipelineId: null,
+  templateId: null,
+  autoProcess: false,
   createdAt: 1640995200,
   lastUpdatedAt: 1640995200,
 };

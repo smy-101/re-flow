@@ -13,11 +13,17 @@ export interface CreateFeedInput {
   feedUrl: string;
   title?: string;
   category?: string;
+  pipelineId?: number | null;
+  templateId?: number | null;
+  autoProcess?: boolean;
 }
 
 export interface UpdateFeedInput {
   title?: string;
   category?: string;
+  pipelineId?: number | null;
+  templateId?: number | null;
+  autoProcess?: boolean;
 }
 
 const API_BASE = '/api';

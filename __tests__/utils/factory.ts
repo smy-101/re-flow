@@ -29,6 +29,9 @@ export function createMockFeed(overrides: Partial<Feed> = {}): Feed {
     siteUrl: 'https://example.com',
     description: 'A test feed',
     category: '技术',
+    pipelineId: null,
+    templateId: null,
+    autoProcess: false,
     createdAt: Math.floor(Date.now() / 1000),
     lastUpdatedAt: Math.floor(Date.now() / 1000),
     ...overrides,
@@ -53,6 +56,9 @@ export function createMockNewFeed(overrides: Partial<NewFeed> = {}): NewFeed {
     siteUrl: 'https://example.com',
     description: 'A test feed',
     category: '技术',
+    pipelineId: null,
+    templateId: null,
+    autoProcess: false,
     ...overrides,
   };
 }

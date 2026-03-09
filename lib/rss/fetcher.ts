@@ -2,6 +2,7 @@ import Parser, { Item } from 'rss-parser';
 import { db } from '@/lib/db';
 import { feedItems, feeds } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
+import { addToQueue } from '@/lib/processing/queue';
 
 // Extend Item type to include custom fields
 type CustomItem = Item & {
@@ -127,7 +128,7 @@ export async function storeItems(
   if (items.length === 0) return 0;
 
   try {
-    // Get feed for category info
+    // Get feed for category info and auto-process settings
     const feed = await db.query.feeds.findFirst({
       where: eq(feeds.id, feedId),
     });
@@ -149,7 +150,24 @@ export async function storeItems(
     }));
 
     // Insert items (duplicates are already filtered by dedupeItems)
-    await db.insert(feedItems).values(itemsToInsert);
+    const insertedItems = await db.insert(feedItems).values(itemsToInsert).returning();
+
+    // Auto-enqueue items if feed has auto-process enabled
+    if (feed.autoProcess && (feed.pipelineId || feed.templateId)) {
+      for (const insertedItem of insertedItems) {
+        try {
+          await addToQueue({
+            userId,
+            feedItemId: insertedItem.id,
+            pipelineId: feed.pipelineId,
+            templateId: feed.templateId,
+          });
+        } catch (error) {
+          // Log error but don't fail the storage operation
+          console.error('Failed to auto-enqueue item:', insertedItem.id, error);
+        }
+      }
+    }
 
     return itemsToInsert.length;
   } catch (error) {

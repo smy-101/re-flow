@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { feeds, feedItems } from '@/lib/db/schema';
+import { feeds, feedItems, pipelines, craftTemplates } from '@/lib/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { getAuthenticatedUser } from '@/lib/auth/auth-helper';
 
@@ -73,7 +73,46 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     }
 
     const body = await request.json();
-    const { title, category } = body;
+    const { title, category, pipelineId, templateId, autoProcess } = body;
+
+    // Validate auto-process configuration
+    if (autoProcess === true) {
+      // Check if either pipelineId or templateId is provided
+      const effectivePipelineId = pipelineId ?? existingFeed.pipelineId;
+      const effectiveTemplateId = templateId ?? existingFeed.templateId;
+
+      if (!effectivePipelineId && !effectiveTemplateId) {
+        return NextResponse.json(
+          { error: '自动处理需要配置管道或模板' },
+          { status: 400 }
+        );
+      }
+      if (effectivePipelineId && effectiveTemplateId) {
+        return NextResponse.json(
+          { error: '管道和模板只能选择其中一个' },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Validate pipeline/template ownership if provided
+    if (pipelineId !== undefined && pipelineId !== null) {
+      const pipeline = await db.query.pipelines.findFirst({
+        where: eq(pipelines.id, pipelineId),
+      });
+      if (!pipeline || pipeline.userId !== userId) {
+        return NextResponse.json({ error: '管道不存在或无权访问' }, { status: 400 });
+      }
+    }
+
+    if (templateId !== undefined && templateId !== null) {
+      const template = await db.query.craftTemplates.findFirst({
+        where: eq(craftTemplates.id, templateId),
+      });
+      if (!template || template.userId !== userId) {
+        return NextResponse.json({ error: '模板不存在或无权访问' }, { status: 400 });
+      }
+    }
 
     // Build update object
     const updateData: Record<string, unknown> = {
@@ -85,6 +124,23 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     }
     if (category !== undefined) {
       updateData.category = category;
+    }
+    if (pipelineId !== undefined) {
+      updateData.pipelineId = pipelineId;
+    }
+    if (templateId !== undefined) {
+      updateData.templateId = templateId;
+    }
+    if (autoProcess !== undefined) {
+      updateData.autoProcess = autoProcess;
+    }
+
+    // Handle mutual exclusivity: if setting one, clear the other
+    if (pipelineId !== undefined && pipelineId !== null) {
+      updateData.templateId = null;
+    }
+    if (templateId !== undefined && templateId !== null) {
+      updateData.pipelineId = null;
     }
 
     // Update feed

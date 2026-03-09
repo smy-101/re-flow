@@ -13,6 +13,13 @@ import { db } from '@/lib/db';
 import { feeds } from '@/lib/db/schema';
 import { createMockFeed } from '@/__tests__/utils/factory';
 
+// Mock the processing queue module
+vi.mock('@/lib/processing/queue', () => ({
+  addToQueue: vi.fn(),
+}));
+
+import { addToQueue } from '@/lib/processing/queue';
+
 // Mock rss-parser
 vi.mock('rss-parser', () => ({
   default: vi.fn(),
@@ -736,6 +743,196 @@ describe('RSS Fetcher', () => {
         const insertedItem = valuesCall[0][0] as { author: string | null };
 
         expect(insertedItem.author).toBe('Test Author');
+      });
+    });
+
+    describe('Auto-Enqueue', () => {
+      it('should auto-enqueue items when feed has autoProcess enabled with pipelineId', async () => {
+        const items: ParsedFeedItem[] = [
+          {
+            title: 'Item 1',
+            link: 'https://example.com/1',
+            content: 'Content 1',
+            publishedAt: 1000,
+          },
+        ];
+
+        const mockFeed = createMockFeed({
+          id: 1,
+          autoProcess: true,
+          pipelineId: 5,
+          templateId: null,
+        });
+        vi.mocked(db.query.feeds.findFirst).mockResolvedValue(mockFeed);
+
+        const mockInsertedItems = [{ id: 10, feedId: 1, userId: 1, title: 'Item 1', link: 'https://example.com/1' }];
+        vi.mocked(db.insert).mockReturnValue({
+          values: vi.fn().mockReturnThis(),
+          returning: vi.fn().mockResolvedValue(mockInsertedItems),
+        } as unknown as ReturnType<typeof db.insert>);
+
+        vi.mocked(addToQueue).mockResolvedValue({
+          id: 1,
+          userId: 1,
+          feedItemId: 10,
+          pipelineId: 5,
+          templateId: null,
+          status: 'pending',
+          priority: 0,
+          attempts: 0,
+          maxAttempts: 3,
+          errorMessage: null,
+          createdAt: Math.floor(Date.now() / 1000),
+          startedAt: null,
+          completedAt: null,
+        });
+
+        await storeItems(1, 1, items);
+
+        expect(addToQueue).toHaveBeenCalledWith({
+          userId: 1,
+          feedItemId: 10,
+          pipelineId: 5,
+          templateId: null,
+        });
+      });
+
+      it('should auto-enqueue items when feed has autoProcess enabled with templateId', async () => {
+        const items: ParsedFeedItem[] = [
+          {
+            title: 'Item 1',
+            link: 'https://example.com/1',
+            content: 'Content 1',
+            publishedAt: 1000,
+          },
+        ];
+
+        const mockFeed = createMockFeed({
+          id: 1,
+          autoProcess: true,
+          pipelineId: null,
+          templateId: 3,
+        });
+        vi.mocked(db.query.feeds.findFirst).mockResolvedValue(mockFeed);
+
+        const mockInsertedItems = [{ id: 11, feedId: 1, userId: 1, title: 'Item 1', link: 'https://example.com/1' }];
+        vi.mocked(db.insert).mockReturnValue({
+          values: vi.fn().mockReturnThis(),
+          returning: vi.fn().mockResolvedValue(mockInsertedItems),
+        } as unknown as ReturnType<typeof db.insert>);
+
+        vi.mocked(addToQueue).mockResolvedValue({
+          id: 2,
+          userId: 1,
+          feedItemId: 11,
+          pipelineId: null,
+          templateId: 3,
+          status: 'pending',
+          priority: 0,
+          attempts: 0,
+          maxAttempts: 3,
+          errorMessage: null,
+          createdAt: Math.floor(Date.now() / 1000),
+          startedAt: null,
+          completedAt: null,
+        });
+
+        await storeItems(1, 1, items);
+
+        expect(addToQueue).toHaveBeenCalledWith({
+          userId: 1,
+          feedItemId: 11,
+          pipelineId: null,
+          templateId: 3,
+        });
+      });
+
+      it('should not auto-enqueue items when feed has autoProcess disabled', async () => {
+        const items: ParsedFeedItem[] = [
+          {
+            title: 'Item 1',
+            link: 'https://example.com/1',
+            content: 'Content 1',
+            publishedAt: 1000,
+          },
+        ];
+
+        const mockFeed = createMockFeed({
+          id: 1,
+          autoProcess: false,
+          pipelineId: 5,
+          templateId: null,
+        });
+        vi.mocked(db.query.feeds.findFirst).mockResolvedValue(mockFeed);
+
+        vi.mocked(db.insert).mockReturnValue({
+          values: vi.fn().mockReturnThis(),
+          returning: vi.fn().mockResolvedValue([{ id: 12 }]),
+        } as unknown as ReturnType<typeof db.insert>);
+
+        await storeItems(1, 1, items);
+
+        expect(addToQueue).not.toHaveBeenCalled();
+      });
+
+      it('should not auto-enqueue items when feed has no pipelineId or templateId', async () => {
+        const items: ParsedFeedItem[] = [
+          {
+            title: 'Item 1',
+            link: 'https://example.com/1',
+            content: 'Content 1',
+            publishedAt: 1000,
+          },
+        ];
+
+        const mockFeed = createMockFeed({
+          id: 1,
+          autoProcess: true,
+          pipelineId: null,
+          templateId: null,
+        });
+        vi.mocked(db.query.feeds.findFirst).mockResolvedValue(mockFeed);
+
+        vi.mocked(db.insert).mockReturnValue({
+          values: vi.fn().mockReturnThis(),
+          returning: vi.fn().mockResolvedValue([{ id: 13 }]),
+        } as unknown as ReturnType<typeof db.insert>);
+
+        await storeItems(1, 1, items);
+
+        expect(addToQueue).not.toHaveBeenCalled();
+      });
+
+      it('should continue storing items even if enqueue fails', async () => {
+        const items: ParsedFeedItem[] = [
+          {
+            title: 'Item 1',
+            link: 'https://example.com/1',
+            content: 'Content 1',
+            publishedAt: 1000,
+          },
+        ];
+
+        const mockFeed = createMockFeed({
+          id: 1,
+          autoProcess: true,
+          pipelineId: 5,
+          templateId: null,
+        });
+        vi.mocked(db.query.feeds.findFirst).mockResolvedValue(mockFeed);
+
+        const mockInsertedItems = [{ id: 14, feedId: 1, userId: 1, title: 'Item 1', link: 'https://example.com/1' }];
+        vi.mocked(db.insert).mockReturnValue({
+          values: vi.fn().mockReturnThis(),
+          returning: vi.fn().mockResolvedValue(mockInsertedItems),
+        } as unknown as ReturnType<typeof db.insert>);
+
+        vi.mocked(addToQueue).mockRejectedValue(new Error('Queue error'));
+
+        // Should not throw
+        const result = await storeItems(1, 1, items);
+
+        expect(result).toBe(1);
       });
     });
   });
