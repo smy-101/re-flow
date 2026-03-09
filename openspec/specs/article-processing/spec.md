@@ -34,16 +34,10 @@ Enable users to process RSS articles using craft templates or pipelines, store p
 - **THEN** 处理历史区域显示队列状态
 - **AND** 状态轮询自动启动
 
-#### Scenario: 处理成功
+#### Scenario: 处理完成
 - **WHEN** 后台 Worker 完成处理
 - **THEN** 系统更新处理结果状态为 `done`
 - **AND** 处理历史自动刷新显示新结果
-
-#### Scenario: 处理失败
-- **WHEN** 处理过程中发生错误
-- **THEN** 系统更新处理结果状态为 `error`
-- **AND** 记录错误信息
-- **AND** 用户可重试
 
 ---
 
