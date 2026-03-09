@@ -107,13 +107,11 @@ export default function ItemDetailPage() {
     }
   };
 
-  const handleProcessingComplete = useCallback(
-    (result: ProcessingResult) => {
-      setRefreshTrigger((prev) => prev + 1);
-      setSelectedResult(result);
-    },
-    [],
-  );
+  const handleQueueSuccess = useCallback(() => {
+    // Trigger refresh of processing history
+    // The queue status will be updated by polling in ProcessingHistory
+    setRefreshTrigger((prev) => prev + 1);
+  }, []);
 
   const handleSelectResult = useCallback((result: ProcessingResult) => {
     setSelectedResult(result);
@@ -216,7 +214,7 @@ export default function ItemDetailPage() {
             <FavoriteButton itemId={item.id} isFavorite={item.isFavorite} />
             <ProcessButton
               feedItemId={item.id}
-              onProcessingComplete={handleProcessingComplete}
+              onQueueSuccess={handleQueueSuccess}
               hasExistingResults={hasExistingResults}
             />
           </div>

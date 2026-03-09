@@ -23,6 +23,18 @@ export interface OverallQueueStatus {
   error: number;
 }
 
+export interface AddToQueueInput {
+  feedItemId: number;
+  templateId?: number;
+  pipelineId?: number;
+}
+
+export interface AddToQueueResponse {
+  success: boolean;
+  jobId: number;
+  isNew: boolean;
+}
+
 /**
  * Get queue status for a specific feed item
  * @param feedItemId - The ID of the feed item
@@ -83,6 +95,29 @@ export async function retryQueueJob(
   if (!response.ok) {
     const error = await response.json();
     throw new Error(error.error || 'Failed to retry job');
+  }
+
+  return response.json();
+}
+
+/**
+ * Add an item to the processing queue
+ * @param input - The feed item ID and either template ID or pipeline ID
+ * @returns The queue response with job ID and whether it's new
+ */
+export async function addToQueue(input: AddToQueueInput): Promise<AddToQueueResponse> {
+  const response = await fetch('/api/queue/add', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+    body: JSON.stringify(input),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || '加入队列失败');
   }
 
   return response.json();

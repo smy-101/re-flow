@@ -6,30 +6,38 @@ Enable users to process RSS articles using craft templates or pipelines, store p
 
 ### Requirement: 处理文章
 
-系统 SHALL 允许已登录用户对 RSS 文章应用模板或管道进行处理。
+系统 SHALL 允许已登录用户对 RSS 文章应用模板或管道进行处理，处理通过入队方式异步执行。
 
 #### Scenario: 使用模板处理
 - **WHEN** 用户在文章详情页点击"处理"按钮
 - **AND** 选择单个工艺模板
-- **THEN** 系统使用该模板处理文章
-- **AND** 存储处理结果
+- **AND** 点击"开始处理"
+- **THEN** 系统将文章加入处理队列
+- **AND** 显示 Toast 提示"已加入队列"
+- **AND** 关闭处理选项弹窗
 
 #### Scenario: 使用管道处理
 - **WHEN** 用户在文章详情页点击"处理"按钮
 - **AND** 选择管道
-- **THEN** 系统按管道步骤顺序处理文章
-- **AND** 存储每步输出和最终结果
+- **AND** 点击"开始处理"
+- **THEN** 系统将文章加入处理队列
+- **AND** 显示 Toast 提示"已加入队列"
+- **AND** 关闭处理选项弹窗
 
-#### Scenario: 处理中状态
-- **WHEN** 处理开始执行
-- **THEN** 系统显示处理中状态
-- **AND** 处理结果状态为 `processing`
+#### Scenario: 文章已在队列中
+- **WHEN** 用户尝试处理已在队列中的文章
+- **THEN** 系统显示 Toast 提示"该文章已在队列中"
+- **AND** 关闭处理选项弹窗
+
+#### Scenario: 入队成功后状态显示
+- **WHEN** 文章成功加入队列
+- **THEN** 处理历史区域显示队列状态
+- **AND** 状态轮询自动启动
 
 #### Scenario: 处理成功
-- **WHEN** 处理完成
+- **WHEN** 后台 Worker 完成处理
 - **THEN** 系统更新处理结果状态为 `done`
-- **AND** 记录完成时间
-- **AND** 记录 Token 消耗
+- **AND** 处理历史自动刷新显示新结果
 
 #### Scenario: 处理失败
 - **WHEN** 处理过程中发生错误
@@ -41,7 +49,7 @@ Enable users to process RSS articles using craft templates or pipelines, store p
 
 ### Requirement: 处理选项弹窗
 
-系统 SHALL 提供处理选项弹窗供用户选择处理方式。
+系统 SHALL 提供处理选项弹窗供用户选择处理方式，点击确认后入队。
 
 #### Scenario: 显示处理选项
 - **WHEN** 用户点击"处理"按钮
@@ -62,6 +70,11 @@ Enable users to process RSS articles using craft templates or pipelines, store p
 - **WHEN** 用户没有任何工艺模板或管道
 - **THEN** 系统显示提示"请先创建模板/管道"
 - **AND** 提供跳转到设置页面的链接
+
+#### Scenario: 入队操作
+- **WHEN** 用户选择模板或管道后点击"开始处理"
+- **THEN** 系统调用入队 API
+- **AND** 不再阻塞等待处理完成
 
 ---
 

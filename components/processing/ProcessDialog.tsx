@@ -5,10 +5,7 @@ import Modal from '@/components/ui/Modal';
 import Button from '@/components/ui/Button';
 import { getCraftTemplates, type CraftTemplate } from '@/lib/api/craft-templates';
 import { getPipelines, type Pipeline } from '@/lib/api/pipelines';
-import {
-  processArticle,
-  type ProcessingResult,
-} from '@/lib/api/processing-results';
+import { addToQueue } from '@/lib/api/queue';
 import { CATEGORY_LABELS } from '@/lib/api/craft-templates';
 
 type TabType = 'template' | 'pipeline';
@@ -17,18 +14,29 @@ interface ProcessDialogProps {
   isOpen: boolean;
   feedItemId: number;
   onClose: () => void;
-  onProcessingStart: () => void;
-  onProcessingComplete: (result: ProcessingResult) => void;
-  onProcessingError: (error: string) => void;
+  onQueueSuccess?: () => void;
+}
+
+// Simple toast implementation (same as FeedCard)
+function showToast(message: string, type: 'success' | 'error' | 'info') {
+  const toast = document.createElement('div');
+  toast.className = `fixed bottom-4 right-4 px-4 py-3 rounded-lg shadow-lg text-white z-50 animate-fade-in ${
+    type === 'success' ? 'bg-green-500' : type === 'error' ? 'bg-red-500' : 'bg-blue-500'
+  }`;
+  toast.textContent = message;
+  document.body.appendChild(toast);
+
+  setTimeout(() => {
+    toast.classList.add('animate-fade-out');
+    setTimeout(() => toast.remove(), 300);
+  }, 3000);
 }
 
 export default function ProcessDialog({
   isOpen,
   feedItemId,
   onClose,
-  onProcessingStart,
-  onProcessingComplete,
-  onProcessingError,
+  onQueueSuccess,
 }: ProcessDialogProps) {
   const [activeTab, setActiveTab] = useState<TabType>('template');
   const [templates, setTemplates] = useState<CraftTemplate[]>([]);
@@ -36,7 +44,7 @@ export default function ProcessDialog({
   const [selectedTemplateId, setSelectedTemplateId] = useState<number | null>(null);
   const [selectedPipelineId, setSelectedPipelineId] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Fetch templates and pipelines when dialog opens
@@ -83,37 +91,39 @@ export default function ProcessDialog({
       return;
     }
 
-    setIsProcessing(true);
+    setIsSubmitting(true);
     setError(null);
-    onProcessingStart();
 
     try {
-      const result = await processArticle(
+      const result = await addToQueue(
         activeTab === 'template'
           ? { feedItemId, templateId: selectedTemplateId! }
           : { feedItemId, pipelineId: selectedPipelineId! },
       );
 
-      if (result.status === 'error') {
-        throw new Error(result.errorMessage ?? '处理失败');
+      if (result.success) {
+        if (result.isNew) {
+          showToast('已加入队列', 'success');
+        } else {
+          showToast('该文章已在队列中', 'info');
+        }
+        onQueueSuccess?.();
+        onClose();
       }
-
-      onProcessingComplete(result);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : '处理失败';
+      const errorMessage = err instanceof Error ? err.message : '加入队列失败';
       setError(errorMessage);
-      onProcessingError(errorMessage);
+      showToast(errorMessage, 'error');
     } finally {
-      setIsProcessing(false);
+      setIsSubmitting(false);
     }
   }, [
     activeTab,
     feedItemId,
     selectedTemplateId,
     selectedPipelineId,
-    onProcessingStart,
-    onProcessingComplete,
-    onProcessingError,
+    onClose,
+    onQueueSuccess,
   ]);
 
   const hasTemplates = templates.length > 0;
@@ -275,18 +285,18 @@ export default function ProcessDialog({
 
         {/* Actions */}
         <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
-          <Button variant="secondary" onClick={onClose} disabled={isProcessing}>
+          <Button variant="secondary" onClick={onClose} disabled={isSubmitting}>
             取消
           </Button>
           <Button
             onClick={handleProcess}
             disabled={
               isLoading ||
-              isProcessing ||
+              isSubmitting ||
               (activeTab === 'template' && !selectedTemplateId) ||
               (activeTab === 'pipeline' && !selectedPipelineId)
             }
-            loading={isProcessing}
+            loading={isSubmitting}
           >
             开始处理
           </Button>
