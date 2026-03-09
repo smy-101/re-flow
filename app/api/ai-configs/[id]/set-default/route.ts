@@ -3,6 +3,7 @@ import { db } from '@/lib/db';
 import { aiConfigs } from '@/lib/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { getAuthenticatedUser } from '@/lib/auth/auth-helper';
+import { getCurrentUnixTimestamp } from '@/lib/time/timestamp';
 
 // PUT /api/ai-configs/[id]/set-default - Set an AI config as default
 export async function PUT(
@@ -29,16 +30,18 @@ export async function PUT(
       return NextResponse.json({ error: '配置不存在' }, { status: 404 });
     }
 
+    const currentTimestamp = getCurrentUnixTimestamp();
+
     // Remove default flag from all configs
     await db
       .update(aiConfigs)
-      .set({ isDefault: false, updatedAt: Date.now() })
+      .set({ isDefault: false, updatedAt: currentTimestamp })
       .where(eq(aiConfigs.userId, userId));
 
     // Set this config as default
     const [updatedConfig] = await db
       .update(aiConfigs)
-      .set({ isDefault: true, updatedAt: Date.now() })
+      .set({ isDefault: true, updatedAt: currentTimestamp })
       .where(eq(aiConfigs.id, configId))
       .returning();
 

@@ -3,6 +3,7 @@ import { db } from '@/lib/db';
 import { pipelines, PipelineStep } from '@/lib/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { getAuthenticatedUser } from '@/lib/auth/auth-helper';
+import { getCurrentUnixTimestamp } from '@/lib/time/timestamp';
 
 // GET /api/pipelines/[id] - Get a specific pipeline
 export async function GET(
@@ -119,7 +120,7 @@ export async function PUT(
 
     // Build update object
     const updateData: Record<string, unknown> = {
-      updatedAt: Date.now(),
+      updatedAt: getCurrentUnixTimestamp(),
     };
 
     if (name !== undefined) updateData.name = name;

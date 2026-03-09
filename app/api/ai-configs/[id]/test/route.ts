@@ -6,6 +6,7 @@ import { getAuthenticatedUser } from '@/lib/auth/auth-helper';
 import { decrypt } from '@/lib/auth/encryption';
 import { testAIConfig } from '@/lib/ai/test';
 import type { AIConfigInput } from '@/lib/ai/providers';
+import { getCurrentUnixTimestamp } from '@/lib/time/timestamp';
 
 // POST /api/ai-configs/[id]/test - Test an AI config
 export async function POST(
@@ -54,6 +55,7 @@ export async function POST(
     };
     // Run test
     const result = await testAIConfig(testConfig);
+    const currentTimestamp = getCurrentUnixTimestamp();
 
     // Update health status based on test result
     if (result.success) {
@@ -63,7 +65,7 @@ export async function POST(
           healthStatus: 'active',
           lastError: null,
           lastErrorAt: null,
-          updatedAt: Date.now(),
+          updatedAt: currentTimestamp,
         })
         .where(eq(aiConfigs.id, configId));
     } else {
@@ -72,8 +74,8 @@ export async function POST(
         .set({
           healthStatus: 'error',
           lastError: result.error || '测试失败',
-          lastErrorAt: Date.now(),
-          updatedAt: Date.now(),
+          lastErrorAt: currentTimestamp,
+          updatedAt: currentTimestamp,
         })
         .where(eq(aiConfigs.id, configId));
     }
@@ -87,13 +89,14 @@ export async function POST(
     const configId = Number.parseInt(id, 10);
     if (!Number.isNaN(configId)) {
       try {
+        const currentTimestamp = getCurrentUnixTimestamp();
         await db
           .update(aiConfigs)
           .set({
             healthStatus: 'error',
             lastError: error instanceof Error ? error.message : '测试失败',
-            lastErrorAt: Date.now(),
-            updatedAt: Date.now(),
+            lastErrorAt: currentTimestamp,
+            updatedAt: currentTimestamp,
           })
           .where(eq(aiConfigs.id, configId));
       } catch (updateError) {

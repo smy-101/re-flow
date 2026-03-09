@@ -3,6 +3,7 @@
 import type { AIConfig, PresetProvider } from '@/lib/api/ai-configs';
 import { useState } from 'react';
 import Button from '@/components/ui/Button';
+import { formatDateTimestamp } from '@/lib/time/timestamp';
 import { HealthStatusBadge } from './HealthStatusBadge';
 import { TestConfigButton } from './TestConfigButton';
 
@@ -44,10 +45,6 @@ export function AIConfigCard({
     onDelete(config);
     setShowDeleteConfirm(false);
     setShowMenu(false);
-  };
-
-  const formatDate = (timestamp: number) => {
-    return new Date(timestamp * 1000).toLocaleDateString('zh-CN');
   };
 
   return (
@@ -134,7 +131,7 @@ export function AIConfigCard({
       {/* Actions */}
       <div className="flex items-center justify-between">
         <span className="text-sm text-gray-500">
-          Created: {formatDate(config.createdAt)}
+          Created: {formatDateTimestamp(config.createdAt)}
         </span>
         <TestConfigButton
           onClick={() => onTest(config)}

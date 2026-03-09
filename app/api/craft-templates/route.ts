@@ -3,6 +3,7 @@ import { db } from '@/lib/db';
 import { craftTemplates, aiConfigs } from '@/lib/db/schema';
 import { eq, desc } from 'drizzle-orm';
 import { getAuthenticatedUser } from '@/lib/auth/auth-helper';
+import { getCurrentUnixTimestamp } from '@/lib/time/timestamp';
 
 // GET /api/craft-templates - List all craft templates for current user
 export async function GET() {
@@ -114,6 +115,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const currentTimestamp = getCurrentUnixTimestamp();
+
     // Create new template
     const [newTemplate] = await db
       .insert(craftTemplates)
@@ -124,8 +127,8 @@ export async function POST(request: NextRequest) {
         aiConfigId,
         promptTemplate,
         category,
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
+        createdAt: currentTimestamp,
+        updatedAt: currentTimestamp,
       })
       .returning();
 

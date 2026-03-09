@@ -1,5 +1,7 @@
 'use client';
 
+import { formatDateTimestamp } from '@/lib/time/timestamp';
+
 interface HealthStatusBadgeProps {
   status: 'unverified' | 'active' | 'error';
   lastError?: string;
@@ -40,7 +42,7 @@ export function HealthStatusBadge({
       {status === 'error' && lastError && (
         <div className="text-xs text-red-600">
           {lastError}
-          {lastErrorAt && ` (${new Date(lastErrorAt * 1000).toLocaleDateString('zh-CN')})`}
+          {lastErrorAt && ` (${formatDateTimestamp(lastErrorAt)})`}
         </div>
       )}
     </div>

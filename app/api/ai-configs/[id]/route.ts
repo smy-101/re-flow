@@ -5,6 +5,7 @@ import { eq, and } from 'drizzle-orm';
 import { getAuthenticatedUser } from '@/lib/auth/auth-helper';
 import { encrypt } from '@/lib/auth/encryption';
 import { maskApiKey } from '@/lib/ai/providers';
+import { getCurrentUnixTimestamp } from '@/lib/time/timestamp';
 
 // GET /api/ai-configs/[id] - Get a specific AI config
 export async function GET(
@@ -116,7 +117,7 @@ export async function PUT(
 
     // Build update object
     const updateData: Record<string, unknown> = {
-      updatedAt: Date.now(),
+      updatedAt: getCurrentUnixTimestamp(),
       healthStatus: 'unverified',
       lastError: null,
       lastErrorAt: null,

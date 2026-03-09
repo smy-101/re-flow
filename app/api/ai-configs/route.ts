@@ -5,6 +5,7 @@ import { eq, desc } from 'drizzle-orm';
 import { getAuthenticatedUser } from '@/lib/auth/auth-helper';
 import { encrypt } from '@/lib/auth/encryption';
 import { maskApiKey } from '@/lib/ai/providers';
+import { getCurrentUnixTimestamp } from '@/lib/time/timestamp';
 
 // GET /api/ai-configs - List all AI configs for current user
 export async function GET() {
@@ -91,12 +92,13 @@ export async function POST(request: NextRequest) {
 
     // Encrypt API key
     const { encrypted, iv, tag } = encrypt(apiKey);
+    const currentTimestamp = getCurrentUnixTimestamp();
 
     // If setting as default, remove default flag from all other configs
     if (isDefault) {
       await db
         .update(aiConfigs)
-        .set({ isDefault: false, updatedAt: Date.now() })
+        .set({ isDefault: false, updatedAt: currentTimestamp })
         .where(eq(aiConfigs.userId, userId));
     }
 
@@ -120,8 +122,8 @@ export async function POST(request: NextRequest) {
         isEnabled,
         healthStatus: 'unverified',
         extraParams: extraParams ? JSON.stringify(extraParams) : null,
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
+        createdAt: currentTimestamp,
+        updatedAt: currentTimestamp,
       })
       .returning();
 

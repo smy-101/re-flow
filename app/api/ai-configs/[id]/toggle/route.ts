@@ -4,6 +4,7 @@ import { aiConfigs } from '@/lib/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { getAuthenticatedUser } from '@/lib/auth/auth-helper';
 import { maskApiKey } from '@/lib/ai/providers';
+import { getCurrentUnixTimestamp } from '@/lib/time/timestamp';
 
 // PUT /api/ai-configs/[id]/toggle - Toggle enabled state of an AI config
 export async function PUT(
@@ -33,7 +34,10 @@ export async function PUT(
     // Toggle enabled state
     const [updatedConfig] = await db
       .update(aiConfigs)
-      .set({ isEnabled: !existingConfig.isEnabled, updatedAt: Date.now() })
+      .set({
+        isEnabled: !existingConfig.isEnabled,
+        updatedAt: getCurrentUnixTimestamp(),
+      })
       .where(eq(aiConfigs.id, configId))
       .returning();
 

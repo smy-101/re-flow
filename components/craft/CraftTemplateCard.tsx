@@ -4,6 +4,7 @@ import { CraftTemplate } from '@/lib/api/craft-templates';
 import { CATEGORY_LABELS } from '@/lib/api/craft-templates';
 import Button from '@/components/ui/Button';
 import Link from 'next/link';
+import { formatTimestamp } from '@/lib/time/timestamp';
 
 interface CraftTemplateCardProps {
   template: CraftTemplate;
@@ -63,7 +64,7 @@ export default function CraftTemplateCard({
         <p className="text-gray-600 font-mono text-xs">{promptPreview}</p>
       </div>
       <div className="mt-3 text-xs text-gray-400">
-        创建于: {new Date(template.createdAt * 1000).toLocaleString('zh-CN')}
+        创建于: {formatTimestamp(template.createdAt)}
       </div>
     </div>
   );

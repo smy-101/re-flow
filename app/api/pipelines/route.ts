@@ -3,6 +3,7 @@ import { db } from '@/lib/db';
 import { pipelines, PipelineStep } from '@/lib/db/schema';
 import { eq, desc } from 'drizzle-orm';
 import { getAuthenticatedUser } from '@/lib/auth/auth-helper';
+import { getCurrentUnixTimestamp } from '@/lib/time/timestamp';
 
 // GET /api/pipelines - List all pipelines for current user
 export async function GET() {
@@ -85,6 +86,8 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    const currentTimestamp = getCurrentUnixTimestamp();
+
     // Create new pipeline
     const [newPipeline] = await db
       .insert(pipelines)
@@ -93,8 +96,8 @@ export async function POST(request: NextRequest) {
         name,
         description: description || null,
         steps: JSON.stringify(steps),
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
+        createdAt: currentTimestamp,
+        updatedAt: currentTimestamp,
       })
       .returning();
 

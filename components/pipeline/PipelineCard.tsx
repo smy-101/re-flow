@@ -3,6 +3,7 @@
 import { Pipeline } from '@/lib/api/pipelines';
 import Button from '@/components/ui/Button';
 import Link from 'next/link';
+import { formatTimestamp } from '@/lib/time/timestamp';
 
 interface PipelineCardProps {
   pipeline: Pipeline;
@@ -79,7 +80,7 @@ export default function PipelineCard({
       </div>
 
       <div className="mt-3 text-xs text-gray-400">
-        创建于: {new Date(pipeline.createdAt * 1000).toLocaleString('zh-CN')}
+        创建于: {formatTimestamp(pipeline.createdAt)}
       </div>
     </div>
   );
