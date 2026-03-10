@@ -7,7 +7,7 @@ export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [formData, setFormData] = useState({
-    username: '',
+    email: '',
     password: '',
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -18,13 +18,19 @@ export default function LoginPage() {
     if (searchParams.get('registered') === 'true') {
       setErrors({ success: '注册成功！请登录您的账户。' });
     }
+    // Show message if redirected from password reset
+    if (searchParams.get('reset') === 'true') {
+      setErrors({ success: '密码重置成功！请使用新密码登录。' });
+    }
   }, [searchParams]);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.username) {
-      newErrors.username = '请输入用户名';
+    if (!formData.email) {
+      newErrors.email = '请输入邮箱';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = '邮箱格式不正确';
     }
 
     if (!formData.password) {
@@ -99,28 +105,28 @@ export default function LoginPage() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Username */}
+            {/* Email */}
             <div>
               <label
-                htmlFor="username"
+                htmlFor="email"
                 className="mb-1 block text-sm font-medium text-gray-700"
               >
-                用户名
+                邮箱
               </label>
               <input
-                id="username"
-                name="username"
-                type="text"
-                autoComplete="username"
-                value={formData.username}
+                id="email"
+                name="email"
+                type="email"
+                autoComplete="email"
+                value={formData.email}
                 onChange={handleChange}
                 className={`w-full rounded-md border px-3 py-2 text-gray-900 placeholder-gray-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 ${
-                  errors.username ? 'border-red-500' : 'border-gray-300'
+                  errors.email ? 'border-red-500' : 'border-gray-300'
                 }`}
-                placeholder="请输入用户名"
+                placeholder="请输入邮箱"
               />
-              {errors.username && (
-                <p className="mt-1 text-sm text-red-600">{errors.username}</p>
+              {errors.email && (
+                <p className="mt-1 text-sm text-red-600">{errors.email}</p>
               )}
             </div>
 
@@ -147,6 +153,16 @@ export default function LoginPage() {
               {errors.password && (
                 <p className="mt-1 text-sm text-red-600">{errors.password}</p>
               )}
+            </div>
+
+            {/* Forgot Password Link */}
+            <div className="text-right">
+              <a
+                href="/forgot-password"
+                className="text-sm font-medium text-indigo-600 hover:text-indigo-500"
+              >
+                忘记密码？
+              </a>
             </div>
 
             {/* Form Error */}

@@ -6,8 +6,12 @@ import { getUserIdFromToken } from '@/lib/auth/jwt';
 const publicRoutes = [
   '/login',
   '/register',
+  '/forgot-password',
+  '/reset-password',
   '/api/auth/login',
   '/api/auth/register',
+  '/api/auth/send-code',
+  '/api/auth/reset-password',
 ];
 
 export async function proxy(request: NextRequest) {

@@ -80,7 +80,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Timestamps use Unix epoch (integer) via SQLite's `strftime('%s', 'now')`
 - Indexes on: `feeds.user_id`, `feed_items.feed_id`, `feed_items.user_id`, `feed_items.published_at`, `feed_items.is_favorite`, `ai_configs.user_id`, `craft_templates.user_id`, `craft_templates.category`
 - Cascade deletes: When a user is deleted, their feeds, items, AI configs, and craft templates are deleted; when a feed is deleted, its items are deleted; craft templates restrict delete when referenced AI config is deleted
-- Tables: `users`, `feeds`, `feed_items`, `ai_configs`, `craft_templates`
+- Tables: `users`, `feeds`, `feed_items`, `ai_configs`, `craft_templates`, `pipelines`, `processing_results`, `processing_queue`, `verification_codes`
 
 **Key Configurations:**
 - Path alias: `@/*` maps to project root (tsconfig.json)
@@ -118,6 +118,45 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `JWT_SECRET` - Secret key for JWT token signing/verification (required for auth)
 - `CRON_SECRET` - Secret for authenticating RSS worker requests to refresh-all endpoint
 - `ENCRYPTION_KEY` - 256-bit key for API key encryption (required for AI configs, 32 bytes hex)
+
+## Email Authentication
+
+**Architecture:**
+- **Verification** (`lib/auth/verification.ts`): Verification code generation and validation
+  - 6-digit numeric codes with 10-minute expiry
+  - 60-second send interval per email/type
+  - Combined rate limiting (email + IP)
+
+- **Email** (`lib/auth/email.ts`): Email sending via SMTP
+  - Nodemailer for flexible SMTP provider support
+  - HTML email templates for verification codes
+
+- **Templates** (`lib/email-templates/`): HTML email templates
+  - `verification-code.ts` - Verification code email template
+
+- **API Endpoints:**
+  - `POST /api/auth/send-code` - Send verification code (register/reset_password)
+  - `POST /api/auth/register` - Register with email + verification code
+  - `POST /api/auth/login` - Login with email + password
+  - `POST /api/auth/reset-password` - Reset password with verification code
+
+**Frontend Pages:**
+- `/login` - Email login page
+- `/register` - Registration with email verification
+- `/forgot-password` - Request password reset
+- `/reset-password` - Reset password with verification code
+
+**Rate Limiting:**
+- Send verification code: 60-second interval per email+type
+- Verification attempts: 5 per 15 minutes per email, 10 per 15 minutes per IP
+
+**Environment Variables (Email):**
+- `SMTP_HOST` - SMTP server hostname
+- `SMTP_PORT` - SMTP server port (default: 587)
+- `SMTP_SECURE` - Use TLS (default: false)
+- `SMTP_USER` - SMTP authentication username
+- `SMTP_PASS` - SMTP authentication password
+- `EMAIL_FROM` - Sender email address (default: uses SMTP_USER)
 
 ## AI Integration
 

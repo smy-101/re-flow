@@ -4,15 +4,45 @@ import { relations } from 'drizzle-orm';
 
 export const users = sqliteTable('users', {
   id: integer('id').primaryKey({ autoIncrement: true }),
-  username: text('username').notNull().unique(),
+  email: text('email').notNull().unique(),
+  nickname: text('nickname').notNull(),
   passwordHash: text('password_hash').notNull(),
+  emailVerified: integer('email_verified', { mode: 'boolean' })
+    .notNull()
+    .default(false),
   createdAt: integer('created_at')
     .notNull()
     .default(sql`(strftime('%s', 'now'))`),
-});
+}, (table) => ({
+  emailIdx: index('users_email_idx').on(table.email),
+}));
 
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
+
+export const verificationCodes = sqliteTable(
+  'verification_codes',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    email: text('email').notNull(),
+    code: text('code').notNull(),
+    type: text('type').notNull(), // 'register' | 'reset_password'
+    createdAt: integer('created_at')
+      .notNull()
+      .default(sql`(strftime('%s', 'now'))`),
+    expiresAt: integer('expires_at').notNull(),
+  },
+  (table) => ({
+    emailTypeIdx: index('verification_codes_email_type_idx').on(
+      table.email,
+      table.type,
+    ),
+  }),
+);
+
+export type VerificationCode = typeof verificationCodes.$inferSelect;
+export type NewVerificationCode = typeof verificationCodes.$inferInsert;
+export type VerificationCodeType = (typeof verificationCodes.$inferSelect)['type'];
 
 export const feeds = sqliteTable(
   'feeds',

@@ -137,19 +137,21 @@ describe('Test Factory Functions', () => {
 
       expect(user).toMatchObject({
         id: 1,
-        username: 'testuser',
+        email: 'test@example.com',
+        nickname: 'testuser',
         passwordHash: 'hashed_password_here',
+        emailVerified: true,
       });
       expect(typeof user.createdAt).toBe('number');
     });
 
     it('should allow overriding fields', () => {
       const user = createMockUser({
-        username: 'customuser',
+        email: 'custom@example.com',
         id: 10,
       });
 
-      expect(user.username).toBe('customuser');
+      expect(user.email).toBe('custom@example.com');
       expect(user.id).toBe(10);
     });
   });
@@ -161,17 +163,18 @@ describe('Test Factory Functions', () => {
       expect(newUser).not.toHaveProperty('id');
       expect(newUser).not.toHaveProperty('createdAt');
       expect(newUser).toMatchObject({
-        username: 'testuser',
+        email: 'test@example.com',
+        nickname: 'testuser',
         passwordHash: 'hashed_password_here',
       });
     });
 
     it('should allow overriding fields', () => {
       const newUser = createMockNewUser({
-        username: 'newuser',
+        email: 'new@example.com',
       });
 
-      expect(newUser.username).toBe('newuser');
+      expect(newUser.email).toBe('new@example.com');
     });
   });
 
@@ -260,11 +263,11 @@ describe('Test Factory Functions', () => {
       // This should not cause type errors
       const feed = createMockFeed({ title: 'Test' });
       const item = createMockItem({ title: 'Test', isFavorite: true });
-      const user = createMockUser({ username: 'test' });
+      const user = createMockUser({ email: 'test@example.com' });
 
       expect(feed.title).toBe('Test');
       expect(item.isFavorite).toBe(true);
-      expect(user.username).toBe('test');
+      expect(user.email).toBe('test@example.com');
     });
   });
 });

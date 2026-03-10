@@ -1,26 +1,34 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { sendVerificationCode } from '@/lib/api/auth';
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { sendVerificationCode, resetPassword } from '@/lib/api/auth';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MIN_PASSWORD_LENGTH = 8;
 const CODE_SEND_INTERVAL = 60;
 
-export default function RegisterPage() {
+export default function ResetPasswordPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [formData, setFormData] = useState({
     email: '',
-    password: '',
-    confirmPassword: '',
     code: '',
-    nickname: '',
+    newPassword: '',
+    confirmPassword: '',
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
   const [isSendingCode, setIsSendingCode] = useState(false);
   const [countdown, setCountdown] = useState(0);
+
+  useEffect(() => {
+    // Get email from URL params
+    const emailParam = searchParams.get('email');
+    if (emailParam) {
+      setFormData((prev) => ({ ...prev, email: emailParam }));
+    }
+  }, [searchParams]);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -37,13 +45,13 @@ export default function RegisterPage() {
       newErrors.code = '验证码为 6 位数字';
     }
 
-    if (!formData.password) {
-      newErrors.password = '请输入密码';
-    } else if (formData.password.length < MIN_PASSWORD_LENGTH) {
-      newErrors.password = `密码至少需要 ${MIN_PASSWORD_LENGTH} 个字符`;
+    if (!formData.newPassword) {
+      newErrors.newPassword = '请输入新密码';
+    } else if (formData.newPassword.length < MIN_PASSWORD_LENGTH) {
+      newErrors.newPassword = `密码至少需要 ${MIN_PASSWORD_LENGTH} 个字符`;
     }
 
-    if (formData.password !== formData.confirmPassword) {
+    if (formData.newPassword !== formData.confirmPassword) {
       newErrors.confirmPassword = '两次输入的密码不一致';
     }
 
@@ -66,7 +74,7 @@ export default function RegisterPage() {
     setErrors({});
 
     try {
-      const result = await sendVerificationCode(formData.email, 'register');
+      const result = await sendVerificationCode(formData.email, 'reset_password');
 
       if (!result.success) {
         setErrors({ code: result.error || '发送验证码失败' });
@@ -105,28 +113,19 @@ export default function RegisterPage() {
     setErrors({});
 
     try {
-      const response = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: formData.email,
-          password: formData.password,
-          code: formData.code,
-          nickname: formData.nickname || undefined,
-        }),
-      });
+      const result = await resetPassword(
+        formData.email,
+        formData.code,
+        formData.newPassword
+      );
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        setErrors({ form: data.error || '注册失败，请稍后重试' });
+      if (!result.success) {
+        setErrors({ form: result.error || '密码重置失败' });
         return;
       }
 
-      // Redirect to login page on successful registration
-      router.push('/login?registered=true');
+      // Redirect to login page on successful password reset
+      router.push('/login?reset=true');
     } catch {
       setErrors({ form: '网络错误，请稍后重试' });
     } finally {
@@ -152,7 +151,7 @@ export default function RegisterPage() {
       <div className="w-full max-w-md">
         <div className="rounded-lg bg-white p-8 shadow-md">
           <h1 className="mb-6 text-center text-2xl font-bold text-gray-900">
-            注册账户
+            重置密码
           </h1>
 
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -162,7 +161,7 @@ export default function RegisterPage() {
                 htmlFor="email"
                 className="mb-1 block text-sm font-medium text-gray-700"
               >
-                邮箱 <span className="text-red-500">*</span>
+                邮箱
               </label>
               <input
                 id="email"
@@ -174,7 +173,7 @@ export default function RegisterPage() {
                 className={`w-full rounded-md border px-3 py-2 text-gray-900 placeholder-gray-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 ${
                   errors.email ? 'border-red-500' : 'border-gray-300'
                 }`}
-                placeholder="请输入邮箱"
+                placeholder="请输入注册邮箱"
               />
               {errors.email && (
                 <p className="mt-1 text-sm text-red-600">{errors.email}</p>
@@ -187,7 +186,7 @@ export default function RegisterPage() {
                 htmlFor="code"
                 className="mb-1 block text-sm font-medium text-gray-700"
               >
-                验证码 <span className="text-red-500">*</span>
+                验证码
               </label>
               <div className="flex gap-2">
                 <input
@@ -221,47 +220,28 @@ export default function RegisterPage() {
               )}
             </div>
 
-            {/* Nickname (Optional) */}
+            {/* New Password */}
             <div>
               <label
-                htmlFor="nickname"
+                htmlFor="newPassword"
                 className="mb-1 block text-sm font-medium text-gray-700"
               >
-                昵称 <span className="text-gray-400 text-xs">(可选)</span>
+                新密码
               </label>
               <input
-                id="nickname"
-                name="nickname"
-                type="text"
-                value={formData.nickname}
-                onChange={handleChange}
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                placeholder="不填则使用邮箱前缀"
-              />
-            </div>
-
-            {/* Password */}
-            <div>
-              <label
-                htmlFor="password"
-                className="mb-1 block text-sm font-medium text-gray-700"
-              >
-                密码 <span className="text-red-500">*</span>
-              </label>
-              <input
-                id="password"
-                name="password"
+                id="newPassword"
+                name="newPassword"
                 type="password"
                 autoComplete="new-password"
-                value={formData.password}
+                value={formData.newPassword}
                 onChange={handleChange}
                 className={`w-full rounded-md border px-3 py-2 text-gray-900 placeholder-gray-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 ${
-                  errors.password ? 'border-red-500' : 'border-gray-300'
+                  errors.newPassword ? 'border-red-500' : 'border-gray-300'
                 }`}
                 placeholder="至少 8 个字符"
               />
-              {errors.password && (
-                <p className="mt-1 text-sm text-red-600">{errors.password}</p>
+              {errors.newPassword && (
+                <p className="mt-1 text-sm text-red-600">{errors.newPassword}</p>
               )}
             </div>
 
@@ -271,7 +251,7 @@ export default function RegisterPage() {
                 htmlFor="confirmPassword"
                 className="mb-1 block text-sm font-medium text-gray-700"
               >
-                确认密码 <span className="text-red-500">*</span>
+                确认新密码
               </label>
               <input
                 id="confirmPassword"
@@ -283,7 +263,7 @@ export default function RegisterPage() {
                 className={`w-full rounded-md border px-3 py-2 text-gray-900 placeholder-gray-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 ${
                   errors.confirmPassword ? 'border-red-500' : 'border-gray-300'
                 }`}
-                placeholder="再次输入密码"
+                placeholder="再次输入新密码"
               />
               {errors.confirmPassword && (
                 <p className="mt-1 text-sm text-red-600">
@@ -305,18 +285,18 @@ export default function RegisterPage() {
               disabled={isLoading}
               className="w-full rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {isLoading ? '注册中...' : '注册'}
+              {isLoading ? '重置中...' : '重置密码'}
             </button>
           </form>
 
           {/* Link to Login */}
           <p className="mt-6 text-center text-sm text-gray-600">
-            已有账户？{' '}
+            想起密码了？{' '}
             <a
               href="/login"
               className="font-medium text-indigo-600 hover:text-indigo-500"
             >
-              立即登录
+              返回登录
             </a>
           </p>
         </div>

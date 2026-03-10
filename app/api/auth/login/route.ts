@@ -8,15 +8,25 @@ import { getClientIp } from '@/lib/auth/ip';
 import { eq } from 'drizzle-orm';
 import { cookies } from 'next/headers';
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { username, password } = body;
+    const { email, password } = body as { email: string; password: string };
 
     // Validate request body
-    if (!username || !password) {
+    if (!email || !password) {
       return NextResponse.json(
-        { error: '请提供用户名和密码' },
+        { error: '请提供邮箱和密码' },
+        { status: 400 }
+      );
+    }
+
+    // Validate email format
+    if (!EMAIL_REGEX.test(email)) {
+      return NextResponse.json(
+        { error: '邮箱格式不正确' },
         { status: 400 }
       );
     }
@@ -40,16 +50,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Query user by username
+    // Query user by email
     const user = await db
       .select()
       .from(users)
-      .where(eq(users.username, username))
+      .where(eq(users.email, email))
       .get();
 
     if (!user) {
       return NextResponse.json(
-        { error: '用户名或密码错误' },
+        { error: '邮箱或密码错误' },
         { status: 401 }
       );
     }
@@ -58,7 +68,7 @@ export async function POST(request: NextRequest) {
     const isValidPassword = await verifyPassword(password, user.passwordHash);
     if (!isValidPassword) {
       return NextResponse.json(
-        { error: '用户名或密码错误' },
+        { error: '邮箱或密码错误' },
         { status: 401 }
       );
     }
@@ -79,7 +89,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       user: {
         id: user.id,
-        username: user.username,
+        email: user.email,
+        nickname: user.nickname,
       },
     });
   } catch (error) {

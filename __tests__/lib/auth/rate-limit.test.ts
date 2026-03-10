@@ -1,5 +1,10 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { checkRateLimit, resetRateLimit } from '@/lib/auth/rate-limit';
+import {
+  checkRateLimit,
+  resetRateLimit,
+  checkVerificationRateLimit,
+  resetVerificationRateLimit,
+} from '@/lib/auth/rate-limit';
 
 describe('Rate Limiter', () => {
   const testIdentifier = 'test-ip-address';
@@ -167,6 +172,90 @@ describe('Rate Limiter', () => {
       // Should still allow request (time-based reset shouldn't cause issues)
       const result2 = checkRateLimit('time-rollback-test');
       expect(result2.allowed).toBe(true);
+
+      vi.restoreAllMocks();
+    });
+  });
+
+  describe('checkVerificationRateLimit', () => {
+    const testEmail = 'test@example.com';
+    const testIp = '192.168.1.1';
+
+    beforeEach(() => {
+      resetVerificationRateLimit(testEmail, testIp);
+    });
+
+    it('should allow verification within both limits', () => {
+      const result = checkVerificationRateLimit(testEmail, testIp);
+      expect(result.allowed).toBe(true);
+    });
+
+    it('should block when email limit is exceeded (5 times)', () => {
+      // Use up email limit (5 times per 15 minutes)
+      // checkVerificationRateLimit increments counters, so we call it 5 times
+      for (let i = 0; i < 5; i++) {
+        checkVerificationRateLimit(testEmail, testIp);
+      }
+
+      // The 6th check should be blocked by email limit
+      const result = checkVerificationRateLimit(testEmail, testIp);
+      expect(result.allowed).toBe(false);
+      expect(result.blockedBy).toBe('email');
+    });
+
+    it('should block when IP limit is exceeded (10 times)', () => {
+      // Use up IP limit with different emails but same IP
+      for (let i = 0; i < 10; i++) {
+        checkVerificationRateLimit(`user${i}@example.com`, testIp);
+      }
+
+      // The 11th check should be blocked by IP limit
+      const result = checkVerificationRateLimit('another@example.com', testIp);
+      expect(result.allowed).toBe(false);
+      expect(result.blockedBy).toBe('ip');
+    });
+
+    it('should track different emails independently', () => {
+      const email1 = 'user1@example.com';
+      const email2 = 'user2@example.com';
+      const ip = '192.168.1.1';
+
+      resetVerificationRateLimit(email1, ip);
+      resetVerificationRateLimit(email2, ip);
+
+      // Exhaust email1 limit
+      for (let i = 0; i < 5; i++) {
+        checkVerificationRateLimit(email1, ip);
+      }
+
+      // email1 should be blocked
+      const result1 = checkVerificationRateLimit(email1, ip);
+      expect(result1.allowed).toBe(false);
+
+      // email2 should still be allowed
+      const result2 = checkVerificationRateLimit(email2, ip);
+      expect(result2.allowed).toBe(true);
+    });
+
+    it('should reset after 15 minute window', () => {
+      const now = Date.now();
+      vi.spyOn(Date, 'now').mockReturnValue(now);
+
+      // Exhaust limit
+      for (let i = 0; i < 5; i++) {
+        checkVerificationRateLimit(testEmail, testIp);
+      }
+
+      // Should be blocked
+      let result = checkVerificationRateLimit(testEmail, testIp);
+      expect(result.allowed).toBe(false);
+
+      // Advance time past 15 minutes
+      vi.spyOn(Date, 'now').mockReturnValue(now + 15 * 60 * 1000 + 1);
+
+      // Should be allowed again
+      result = checkVerificationRateLimit(testEmail, testIp);
+      expect(result.allowed).toBe(true);
 
       vi.restoreAllMocks();
     });

@@ -122,14 +122,16 @@ export function createMockNewItem(overrides: Partial<NewFeedItem> = {}): NewFeed
  *
  * @example
  * ```ts
- * const user = createMockUser({ username: 'customuser' });
+ * const user = createMockUser({ email: 'custom@example.com' });
  * ```
  */
 export function createMockUser(overrides: Partial<User> = {}): User {
   return {
     id: 1,
-    username: 'testuser',
+    email: 'test@example.com',
+    nickname: 'testuser',
     passwordHash: 'hashed_password_here',
+    emailVerified: true,
     createdAt: Math.floor(Date.now() / 1000),
     ...overrides,
   };
@@ -142,12 +144,13 @@ export function createMockUser(overrides: Partial<User> = {}): User {
  *
  * @example
  * ```ts
- * const newUser = createMockNewUser({ username: 'newuser' });
+ * const newUser = createMockNewUser({ email: 'new@example.com' });
  * ```
  */
 export function createMockNewUser(overrides: Partial<NewUser> = {}): NewUser {
   return {
-    username: 'testuser',
+    email: 'test@example.com',
+    nickname: 'testuser',
     passwordHash: 'hashed_password_here',
     ...overrides,
   };
