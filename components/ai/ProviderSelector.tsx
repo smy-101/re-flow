@@ -1,6 +1,7 @@
 'use client';
 
 import type { PresetProvider } from '@/lib/api/ai-configs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/Select';
 
 interface ProviderSelectorProps {
   providerId: string;
@@ -15,21 +16,21 @@ export function ProviderSelector({
 }: ProviderSelectorProps) {
   return (
     <div className="space-y-2">
-      <label htmlFor="provider" className="block text-sm font-medium text-gray-700">
+      <label htmlFor="provider" className="block text-sm font-medium text-foreground">
         供应商 *
       </label>
-      <select
-        id="provider"
-        value={providerId || ''}
-        onChange={(e) => onChange(e.target.value)}
-        className="block w-full rounded-lg border-gray-300 border px-3 py-2 text-sm focus:border-blue-500 focus:ring-blue-500 focus:outline-none focus:ring-2"
-      >
+      <Select value={providerId || ''} onValueChange={onChange}>
+        <SelectTrigger id="provider">
+          <SelectValue placeholder="选择供应商" />
+        </SelectTrigger>
+        <SelectContent>
         {presets.map((provider) => (
-          <option key={provider.id} value={provider.id}>
+          <SelectItem key={provider.id} value={provider.id}>
             {provider.name}
-          </option>
+          </SelectItem>
         ))}
-      </select>
+        </SelectContent>
+      </Select>
     </div>
   );
 }

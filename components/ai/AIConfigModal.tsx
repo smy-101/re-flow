@@ -30,7 +30,7 @@ export function AIConfigModal({
   isTesting = false,
 }: AIConfigModalProps) {
   return (
-    <Modal isOpen={isOpen} onClose={onCancel} title="AI 配置设置">
+    <Modal isOpen={isOpen} onClose={onCancel} title="AI 配置设置" size="lg">
       <AIConfigForm
         config={config}
         presets={presets}

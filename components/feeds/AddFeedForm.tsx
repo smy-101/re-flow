@@ -2,9 +2,11 @@
 
 import { useState, useEffect, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
-import Input from '@/components/ui/Input';
+import Alert, { AlertDescription, AlertTitle } from '@/components/ui/Alert';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
+import Input from '@/components/ui/Input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/Select';
 import { createFeed } from '@/lib/api/feeds';
 import { validateFeedUrl } from '@/lib/api/validate';
 import { getCategories } from '@/lib/api/categories';
@@ -86,8 +88,15 @@ export default function AddFeedForm({ onSuccess }: AddFeedFormProps) {
   };
 
   return (
-    <Card padding="lg">
-      <form onSubmit={handleSubmit} className="space-y-4">
+    <Card padding="lg" className="border-border/70 bg-card/95 shadow-sm">
+      <form onSubmit={handleSubmit} className="space-y-5">
+        <div className="space-y-1">
+          <h2 className="text-lg font-semibold text-foreground">添加订阅</h2>
+          <p className="text-sm text-muted-foreground">
+            先验证 RSS 地址，再补充标题或分类，减少导入失败和命名不一致。
+          </p>
+        </div>
+
         <Input
           label="RSS Feed URL *"
           type="url"
@@ -113,20 +122,24 @@ export default function AddFeedForm({ onSuccess }: AddFeedFormProps) {
         </div>
 
         {validationResult && (
-          <div
-            className={`p-3 rounded-lg ${
-              validationResult.valid
-                ? 'bg-green-50 text-green-800'
-                : 'bg-red-50 text-red-800'
-            }`}
-          >
-            {validationResult.valid ? (
-              <p>✓ Feed 有效，{validationResult.title && `标题: ${validationResult.title}`}</p>
-            ) : (
-              <p>✗ {validationResult.error || 'Feed 无效'}</p>
-            )}
-          </div>
+          <Alert variant={validationResult.valid ? 'success' : 'destructive'}>
+            <AlertTitle>{validationResult.valid ? '验证成功' : '验证失败'}</AlertTitle>
+            <AlertDescription>
+              {validationResult.valid
+                ? validationResult.title
+                  ? `Feed 有效，检测到标题：${validationResult.title}`
+                  : 'Feed 有效，可以继续保存。'
+                : validationResult.error || 'Feed 无效'}
+            </AlertDescription>
+          </Alert>
         )}
+
+        {error && !validationResult ? (
+          <Alert variant="destructive">
+            <AlertTitle>表单错误</AlertTitle>
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        ) : null}
 
         <Input
           label="自定义名称（可选）"
@@ -136,25 +149,26 @@ export default function AddFeedForm({ onSuccess }: AddFeedFormProps) {
           onChange={(e) => setCustomTitle(e.target.value)}
         />
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-foreground">
             分类（可选）
           </label>
-          <select
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          >
-            <option value="">未分类</option>
-            {categories.map((cat) => (
-              <option key={cat} value={cat}>
-                {cat}
-              </option>
-            ))}
-          </select>
+          <Select value={category || '__none__'} onValueChange={(value) => setCategory(value === '__none__' ? '' : value)}>
+            <SelectTrigger>
+              <SelectValue placeholder="未分类" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__none__">未分类</SelectItem>
+              {categories.map((cat) => (
+                <SelectItem key={cat} value={cat}>
+                  {cat}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
-        <div className="flex gap-3 pt-4">
+        <div className="flex flex-col gap-3 pt-2 sm:flex-row">
           <Button
             type="submit"
             loading={submitting}

@@ -1,44 +1,67 @@
-'use client';
+"use client";
 
-import { InputHTMLAttributes, forwardRef } from 'react';
+import * as React from "react";
+import { cn } from "@/lib/utils";
 
-interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
+export interface InputProps
+  extends React.InputHTMLAttributes<HTMLInputElement> {
   error?: string;
   label?: string;
+  helperText?: string;
+  containerClassName?: string;
+  labelClassName?: string;
 }
 
-const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ error, label, className = '', id, ...props }, ref) => {
-    const inputId = id || label?.toLowerCase().replace(/\s+/g, '-');
+const Input = React.forwardRef<HTMLInputElement, InputProps>(
+  (
+    {
+      className,
+      containerClassName,
+      labelClassName,
+      error,
+      helperText,
+      label,
+      id,
+      ...props
+    },
+    ref
+  ) => {
+    const inputId = id || label?.toLowerCase().replace(/\s+/g, "-");
 
     return (
-      <div className="w-full">
-        {label && (
+      <div className={cn("w-full space-y-2", containerClassName)}>
+        {label ? (
           <label
             htmlFor={inputId}
-            className="block text-sm font-medium text-gray-700 mb-1"
+            className={cn("block text-sm font-medium text-foreground", labelClassName)}
           >
             {label}
           </label>
-        )}
+        ) : null}
         <input
           ref={ref}
           id={inputId}
-          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
-            error
-              ? 'border-red-500 focus:ring-red-500'
-              : 'border-gray-300'
-          } disabled:bg-gray-100 disabled:cursor-not-allowed ${className}`.trim()}
+          data-slot="input"
+          className={cn(
+            "flex h-11 w-full rounded-lg border bg-background px-3 py-2 text-sm text-foreground shadow-xs transition-[border-color,box-shadow] outline-none placeholder:text-muted-foreground file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:cursor-not-allowed disabled:opacity-50",
+            "focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+            error ? "border-destructive focus-visible:ring-destructive/60" : "border-input",
+            className
+          )}
+          aria-invalid={Boolean(error)}
           {...props}
         />
-        {error && (
-          <p className="mt-1 text-sm text-red-600">{error}</p>
-        )}
+        {error ? (
+          <p className="text-sm text-destructive">{error}</p>
+        ) : helperText ? (
+          <p className="text-sm text-muted-foreground">{helperText}</p>
+        ) : null}
       </div>
     );
   }
 );
 
-Input.displayName = 'Input';
+Input.displayName = "Input";
 
+export { Input };
 export default Input;

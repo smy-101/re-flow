@@ -1,27 +1,29 @@
+import { cn } from '@/lib/utils';
+
 type LoadingSpinnerProps = {
   size?: 'sm' | 'md' | 'lg';
-  color?: 'blue' | 'gray';
+  color?: 'primary' | 'muted';
 };
 
 const sizeStyles = {
-  sm: 'w-4 h-4',
-  md: 'w-8 h-8',
-  lg: 'w-12 h-12',
+  sm: 'size-4',
+  md: 'size-8',
+  lg: 'size-12',
 };
 
 const colorStyles = {
-  blue: 'text-blue-600',
-  gray: 'text-gray-400',
+  primary: 'text-primary',
+  muted: 'text-muted-foreground',
 };
 
 export default function LoadingSpinner({
   size = 'md',
-  color = 'blue',
+  color = 'primary',
 }: LoadingSpinnerProps) {
   return (
     <div className="flex items-center justify-center">
       <svg
-        className={`animate-spin ${sizeStyles[size]} ${colorStyles[color]}`}
+        className={cn('animate-spin', sizeStyles[size], colorStyles[color])}
         fill="none"
         viewBox="0 0 24 24"
       >

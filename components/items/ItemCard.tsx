@@ -1,6 +1,8 @@
 'use client';
 
 import Link from 'next/link';
+import { Clock3, UserRound } from 'lucide-react';
+import Badge from '@/components/ui/Badge';
 import Card from '@/components/ui/Card';
 import { FeedItem } from '@/lib/api/items';
 import ReadToggleButton from './ReadToggleButton';
@@ -30,60 +32,46 @@ export default function ItemCard({ item, feedTitle }: ItemCardProps) {
   };
 
   return (
-    <Card className="hover:shadow-md transition-shadow">
-      <Link href={`/items/${item.id}`}>
-        <div className="flex items-start gap-3">
-          {!item.isRead && (
-            <div className="flex-shrink-0 w-2 h-2 bg-green-500 rounded-full mt-2" />
-          )}
+    <Card className="border-border/70 bg-card/95 transition-shadow hover:shadow-md">
+      <div className="flex items-start gap-4">
+        {!item.isRead ? <div className="mt-2 size-2 shrink-0 rounded-full bg-success" /> : null}
 
-          <div className="flex-1 min-w-0">
-            <h3 className="text-lg font-semibold text-gray-900 hover:text-blue-600 transition-colors line-clamp-2 mb-2">
+        <Link href={`/items/${item.id}`} className="min-w-0 flex-1 space-y-3">
+          <div className="space-y-2">
+            <h3 className="line-clamp-2 text-lg font-semibold text-foreground transition-colors hover:text-primary">
               {item.title}
             </h3>
-
-            {feedTitle && (
-              <span className="inline-block px-2 py-0.5 text-xs font-medium text-gray-600 bg-gray-100 rounded-full mb-2">
-                {feedTitle}
-              </span>
-            )}
-
-            <p className="text-sm text-gray-600 line-clamp-2 mb-3">{item.content}</p>
-
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-gray-500">
-              {item.author && (
-                <span className="flex items-center gap-1">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                  </svg>
-                  {item.author}
-                </span>
-              )}
-
-              <span className="flex items-center gap-1">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                {formatDate(item.publishedAt)}
-              </span>
-
-              {item.readingTime && (
-                <span className="flex items-center gap-1">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  {item.readingTime} 分钟
-                </span>
-              )}
+            <div className="flex flex-wrap items-center gap-2">
+              {feedTitle ? <Badge variant="outline">{feedTitle}</Badge> : null}
+              {!item.isRead ? <Badge variant="success">未读</Badge> : <Badge variant="default">已读</Badge>}
+              {item.isFavorite ? <Badge variant="warning">已收藏</Badge> : null}
             </div>
           </div>
 
-          <div className="flex-shrink-0 flex flex-col gap-2">
-            <ReadToggleButton itemId={item.id} isRead={item.isRead} />
-            <FavoriteButton itemId={item.id} isFavorite={item.isFavorite} />
+          <p className="line-clamp-3 text-sm leading-6 text-muted-foreground">{item.content}</p>
+
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
+            {item.author ? (
+              <span className="inline-flex items-center gap-1">
+                <UserRound className="size-4" />
+                {item.author}
+              </span>
+            ) : null}
+
+            <span className="inline-flex items-center gap-1">
+              <Clock3 className="size-4" />
+              {formatDate(item.publishedAt)}
+            </span>
+
+            {item.readingTime ? <span>{item.readingTime} 分钟阅读</span> : null}
           </div>
+        </Link>
+
+        <div className="flex shrink-0 flex-col gap-2">
+          <ReadToggleButton itemId={item.id} isRead={item.isRead} />
+          <FavoriteButton itemId={item.id} isFavorite={item.isFavorite} />
         </div>
-      </Link>
+      </div>
     </Card>
   );
 }

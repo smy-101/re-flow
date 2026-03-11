@@ -1,7 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import Link from 'next/link';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import AuthShell from '@/components/auth/AuthShell';
+import Alert, { AlertDescription, AlertTitle } from '@/components/ui/Alert';
+import Button from '@/components/ui/Button';
+import Input from '@/components/ui/Input';
 import { sendVerificationCode } from '@/lib/api/auth';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -21,6 +26,18 @@ export default function RegisterPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isSendingCode, setIsSendingCode] = useState(false);
   const [countdown, setCountdown] = useState(0);
+
+  useEffect(() => {
+    if (countdown <= 0) {
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      setCountdown((prev) => prev - 1);
+    }, 1000);
+
+    return () => window.clearTimeout(timer);
+  }, [countdown]);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -76,17 +93,7 @@ export default function RegisterPage() {
         return;
       }
 
-      // Start countdown
       setCountdown(CODE_SEND_INTERVAL);
-      const timer = setInterval(() => {
-        setCountdown((prev) => {
-          if (prev <= 1) {
-            clearInterval(timer);
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
     } catch {
       setErrors({ code: '发送验证码失败，请稍后重试' });
     } finally {
@@ -125,7 +132,6 @@ export default function RegisterPage() {
         return;
       }
 
-      // Redirect to login page on successful registration
       router.push('/login?registered=true');
     } catch {
       setErrors({ form: '网络错误，请稍后重试' });
@@ -137,190 +143,120 @@ export default function RegisterPage() {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-    // Clear error for this field when user starts typing
-    if (errors[name]) {
+    if (errors[name] || errors.form) {
       setErrors((prev) => {
-        const newErrors = { ...prev };
-        delete newErrors[name];
-        return newErrors;
+        const next = { ...prev };
+        delete next[name];
+        delete next.form;
+        return next;
       });
     }
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
-      <div className="w-full max-w-md">
-        <div className="rounded-lg bg-white p-8 shadow-md">
-          <h1 className="mb-6 text-center text-2xl font-bold text-gray-900">
-            注册账户
-          </h1>
+    <AuthShell
+      title="注册账户"
+      description="创建账号后即可保存订阅、收藏文章，并管理 AI 配置与模板。"
+      footer={
+        <p>
+          已有账户？{' '}
+          <Link href="/login" className="font-medium text-primary transition-colors hover:text-primary/80">
+            立即登录
+          </Link>
+        </p>
+      }
+    >
+      <div className="space-y-4">
+        {errors.form ? (
+          <Alert variant="destructive">
+            <AlertTitle>注册失败</AlertTitle>
+            <AlertDescription>{errors.form}</AlertDescription>
+          </Alert>
+        ) : null}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Email */}
-            <div>
-              <label
-                htmlFor="email"
-                className="mb-1 block text-sm font-medium text-gray-700"
-              >
-                邮箱 <span className="text-red-500">*</span>
-              </label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                autoComplete="email"
-                value={formData.email}
-                onChange={handleChange}
-                className={`w-full rounded-md border px-3 py-2 text-gray-900 placeholder-gray-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 ${
-                  errors.email ? 'border-red-500' : 'border-gray-300'
-                }`}
-                placeholder="请输入邮箱"
-              />
-              {errors.email && (
-                <p className="mt-1 text-sm text-red-600">{errors.email}</p>
-              )}
-            </div>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <Input
+            id="email"
+            name="email"
+            type="email"
+            autoComplete="email"
+            label="邮箱"
+            placeholder="请输入邮箱"
+            value={formData.email}
+            onChange={handleChange}
+            error={errors.email}
+          />
 
-            {/* Verification Code */}
-            <div>
-              <label
-                htmlFor="code"
-                className="mb-1 block text-sm font-medium text-gray-700"
-              >
-                验证码 <span className="text-red-500">*</span>
-              </label>
-              <div className="flex gap-2">
-                <input
-                  id="code"
-                  name="code"
-                  type="text"
-                  inputMode="numeric"
-                  maxLength={6}
-                  value={formData.code}
-                  onChange={handleChange}
-                  className={`flex-1 rounded-md border px-3 py-2 text-gray-900 placeholder-gray-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 ${
-                    errors.code ? 'border-red-500' : 'border-gray-300'
-                  }`}
-                  placeholder="6 位数字验证码"
-                />
-                <button
-                  type="button"
-                  onClick={handleSendCode}
-                  disabled={isSendingCode || countdown > 0}
-                  className="whitespace-nowrap rounded-md border border-indigo-600 px-3 py-2 text-sm font-medium text-indigo-600 hover:bg-indigo-50 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {isSendingCode
-                    ? '发送中...'
-                    : countdown > 0
-                      ? `${countdown}秒后重试`
-                      : '发送验证码'}
-                </button>
-              </div>
-              {errors.code && (
-                <p className="mt-1 text-sm text-red-600">{errors.code}</p>
-              )}
-            </div>
-
-            {/* Nickname (Optional) */}
-            <div>
-              <label
-                htmlFor="nickname"
-                className="mb-1 block text-sm font-medium text-gray-700"
-              >
-                昵称 <span className="text-gray-400 text-xs">(可选)</span>
-              </label>
-              <input
-                id="nickname"
-                name="nickname"
+          <div className="space-y-2">
+            <label htmlFor="code" className="block text-sm font-medium text-foreground">
+              验证码
+            </label>
+            <div className="flex items-start gap-2">
+              <Input
+                id="code"
+                name="code"
                 type="text"
-                value={formData.nickname}
+                inputMode="numeric"
+                maxLength={6}
+                placeholder="6 位数字验证码"
+                value={formData.code}
                 onChange={handleChange}
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                placeholder="不填则使用邮箱前缀"
+                error={errors.code}
+                containerClassName="flex-1"
               />
-            </div>
-
-            {/* Password */}
-            <div>
-              <label
-                htmlFor="password"
-                className="mb-1 block text-sm font-medium text-gray-700"
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={handleSendCode}
+                disabled={isSendingCode || countdown > 0}
+                loading={isSendingCode}
+                className="mt-0 min-w-32"
               >
-                密码 <span className="text-red-500">*</span>
-              </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="new-password"
-                value={formData.password}
-                onChange={handleChange}
-                className={`w-full rounded-md border px-3 py-2 text-gray-900 placeholder-gray-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 ${
-                  errors.password ? 'border-red-500' : 'border-gray-300'
-                }`}
-                placeholder="至少 8 个字符"
-              />
-              {errors.password && (
-                <p className="mt-1 text-sm text-red-600">{errors.password}</p>
-              )}
+                {countdown > 0 ? `${countdown} 秒` : '发送验证码'}
+              </Button>
             </div>
+          </div>
 
-            {/* Confirm Password */}
-            <div>
-              <label
-                htmlFor="confirmPassword"
-                className="mb-1 block text-sm font-medium text-gray-700"
-              >
-                确认密码 <span className="text-red-500">*</span>
-              </label>
-              <input
-                id="confirmPassword"
-                name="confirmPassword"
-                type="password"
-                autoComplete="new-password"
-                value={formData.confirmPassword}
-                onChange={handleChange}
-                className={`w-full rounded-md border px-3 py-2 text-gray-900 placeholder-gray-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 ${
-                  errors.confirmPassword ? 'border-red-500' : 'border-gray-300'
-                }`}
-                placeholder="再次输入密码"
-              />
-              {errors.confirmPassword && (
-                <p className="mt-1 text-sm text-red-600">
-                  {errors.confirmPassword}
-                </p>
-              )}
-            </div>
+          <Input
+            id="nickname"
+            name="nickname"
+            type="text"
+            label="昵称"
+            placeholder="不填则使用邮箱前缀"
+            value={formData.nickname}
+            onChange={handleChange}
+            helperText="可选字段，用于在界面中显示您的名称。"
+          />
 
-            {/* Form Error */}
-            {errors.form && (
-              <div className="rounded-md bg-red-50 p-3">
-                <p className="text-sm text-red-600">{errors.form}</p>
-              </div>
-            )}
+          <Input
+            id="password"
+            name="password"
+            type="password"
+            autoComplete="new-password"
+            label="密码"
+            placeholder="至少 8 个字符"
+            value={formData.password}
+            onChange={handleChange}
+            error={errors.password}
+          />
 
-            {/* Submit Button */}
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {isLoading ? '注册中...' : '注册'}
-            </button>
-          </form>
+          <Input
+            id="confirmPassword"
+            name="confirmPassword"
+            type="password"
+            autoComplete="new-password"
+            label="确认密码"
+            placeholder="再次输入密码"
+            value={formData.confirmPassword}
+            onChange={handleChange}
+            error={errors.confirmPassword}
+          />
 
-          {/* Link to Login */}
-          <p className="mt-6 text-center text-sm text-gray-600">
-            已有账户？{' '}
-            <a
-              href="/login"
-              className="font-medium text-indigo-600 hover:text-indigo-500"
-            >
-              立即登录
-            </a>
-          </p>
-        </div>
+          <Button type="submit" loading={isLoading} fullWidth>
+            创建账户
+          </Button>
+        </form>
       </div>
-    </div>
+    </AuthShell>
   );
 }

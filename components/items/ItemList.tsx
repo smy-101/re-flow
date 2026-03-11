@@ -2,13 +2,15 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { FileText, TriangleAlert } from 'lucide-react';
 import ItemCard from './ItemCard';
 import MarkAllReadConfirm from './MarkAllReadConfirm';
 import { fetchItems, markAllAsRead, FeedItem } from '@/lib/api/items';
 import { fetchFeeds, Feed } from '@/lib/api/feeds';
+import Button from '@/components/ui/Button';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import Card from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/Select';
 
 type FilterStatus = 'all' | 'unread' | 'read';
 
@@ -116,7 +118,7 @@ export default function ItemList({
 
   if (loading) {
     return (
-      <div className="flex justify-center py-12">
+      <div className="flex justify-center py-16">
         <LoadingSpinner size="lg" />
       </div>
     );
@@ -124,13 +126,11 @@ export default function ItemList({
 
   if (error) {
     return (
-      <Card>
-        <div className="text-center py-8">
-          <p className="text-red-600 mb-4">{error}</p>
-          <button
-            onClick={() => window.location.reload()}
-            className="text-blue-600 hover:underline"
-          >
+      <Card className="border-destructive/20 bg-destructive/10">
+        <div className="flex flex-col items-center py-10 text-center">
+          <TriangleAlert className="mb-4 size-10 text-destructive" />
+          <p className="mb-4 text-sm text-destructive">{error}</p>
+          <button onClick={() => window.location.reload()} className="text-sm font-medium text-primary hover:underline">
             重新加载
           </button>
         </div>
@@ -140,28 +140,16 @@ export default function ItemList({
 
   if (items.length === 0) {
     return (
-      <Card>
-        <div className="text-center py-12">
-          <svg
-            className="w-16 h-16 mx-auto text-gray-400 mb-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-            />
-          </svg>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">
+      <Card className="border-border/70 bg-card/95">
+        <div className="py-14 text-center">
+          <FileText className="mx-auto mb-4 size-14 text-muted-foreground" />
+          <h3 className="mb-2 text-lg font-semibold text-foreground">
             {filterStatus === 'unread' ? '暂无未读文章' :
              filterStatus === 'read' ? '暂无已读文章' :
              filterFavorite ? '暂无收藏文章' :
              '暂无文章'}
           </h3>
-          <p className="text-gray-600">
+          <p className="mx-auto max-w-md text-sm leading-6 text-muted-foreground">
             {filterStatus === 'unread' ? '太棒了！你已经读完所有文章' :
              filterStatus === 'read' ? '还没有阅读过任何文章，去探索吧！' :
              filterFavorite ? '还没有收藏任何文章' :
@@ -174,34 +162,37 @@ export default function ItemList({
 
   return (
     <div>
-      {/* Filters */}
-      <div className="flex flex-wrap items-center gap-4 mb-6 p-4 bg-white rounded-lg border border-gray-200">
-        <div className="flex items-center gap-2">
-          <label className="text-sm font-medium text-gray-700">排序:</label>
-          <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as 'newest' | 'oldest')}
-            className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="newest">最新优先</option>
-            <option value="oldest">最早优先</option>
-          </select>
-        </div>
+      <div className="mb-6 flex flex-col gap-4 rounded-2xl border border-border/70 bg-card/95 p-4 shadow-sm lg:flex-row lg:items-center">
+        <div className="grid flex-1 gap-4 sm:grid-cols-2">
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-foreground">排序</label>
+            <Select value={sortBy} onValueChange={(value) => setSortBy(value as 'newest' | 'oldest')}>
+              <SelectTrigger>
+                <SelectValue placeholder="选择排序" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="newest">最新优先</SelectItem>
+                <SelectItem value="oldest">最早优先</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
-        <div className="flex items-center gap-2">
-          <label className="text-sm font-medium text-gray-700">订阅:</label>
-          <select
-            value={selectedFeed || ''}
-            onChange={(e) => setSelectedFeed(e.target.value || null)}
-            className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="">全部</option>
-            {feeds.map((feed) => (
-              <option key={feed.id} value={String(feed.id)}>
-                {feed.title}
-              </option>
-            ))}
-          </select>
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-foreground">订阅</label>
+            <Select value={selectedFeed || '__all__'} onValueChange={(value) => setSelectedFeed(value === '__all__' ? null : value)}>
+              <SelectTrigger>
+                <SelectValue placeholder="全部订阅" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__all__">全部</SelectItem>
+                {feeds.map((feed) => (
+                  <SelectItem key={feed.id} value={String(feed.id)}>
+                    {feed.title}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         {filterFavorite && (
@@ -221,21 +212,19 @@ export default function ItemList({
             variant="primary"
             size="sm"
             onClick={() => setIsConfirmOpen(true)}
-            className="ml-auto"
+            className="lg:ml-auto"
           >
-            🔥 全部标记为已读
+            全部标记为已读
           </Button>
         )}
       </div>
 
-      {/* Items */}
       <div className="space-y-4">
         {sortedItems.map((item) => (
           <ItemCard key={item.id} item={item} feedTitle={getFeedTitle(item.feedId)} />
         ))}
       </div>
 
-      {/* Mark All Read Confirmation Dialog */}
       <MarkAllReadConfirm
         isOpen={isConfirmOpen}
         onClose={() => setIsConfirmOpen(false)}

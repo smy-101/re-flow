@@ -3,6 +3,8 @@
 import Link from 'next/link';
 import { type LucideIcon } from 'lucide-react';
 import { usePathname } from 'next/navigation';
+import Badge from '@/components/ui/Badge';
+import { cn } from '@/lib/utils';
 
 interface SidebarItemProps {
   label: string;
@@ -24,58 +26,45 @@ export default function SidebarItem({
   count,
 }: SidebarItemProps) {
   const pathname = usePathname();
-
-  // 确定当前项是否激活
   const isCurrentPage = pathname === href;
 
   return (
     <Link
       href={href}
-      className={`
-        relative flex items-center w-full px-3 py-2 rounded-lg transition-all duration-200 group
-        ${disabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-100 dark:hover:bg-zinc-800'}
-        ${isActive ? 'bg-gray-100 dark:bg-zinc-800' : ''}
-      `}
+      className={cn(
+        'group relative flex w-full items-center rounded-lg border border-transparent px-3 py-2.5 transition-colors duration-200',
+        disabled ? 'cursor-not-allowed opacity-50' : 'hover:bg-secondary/70',
+        isActive
+          ? 'bg-sidebar-foreground/6 text-foreground'
+          : 'text-sidebar-foreground/82'
+      )}
       aria-current={isCurrentPage ? 'page' : undefined}
       {...(disabled && { onClick: (e) => e.preventDefault(), tabIndex: -1 })}
     >
-      {/* 激活状态的左侧彩色边框 */}
-      {isActive && (
-        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-blue-600 rounded-r-full" />
-      )}
+      {isActive ? (
+        <div className="absolute left-0 top-1/2 h-7 w-1 -translate-y-1/2 rounded-r-full bg-primary" />
+      ) : null}
 
-      {/* 图标 */}
       <Icon
-        className={`
-          flex-shrink-0 transition-colors
-          ${isActive ? 'text-blue-600 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400'}
-        `}
+        className={cn(
+          'shrink-0 transition-colors',
+          isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground'
+        )}
         size={20}
       />
 
-      {/* 文字标签（展开状态下显示） */}
-      {!collapsed && (
-        <span
-          className={`
-            ml-3 text-sm font-medium truncate transition-colors
-            ${isActive ? 'text-gray-900 dark:text-gray-50' : 'text-gray-700 dark:text-gray-300'}
-          `}
-        >
-          {label}
-          {count !== undefined && (
-            <span className="ml-1 text-xs text-gray-500 dark:text-gray-400">
-              ({count})
-            </span>
-          )}
-        </span>
-      )}
+      {!collapsed ? (
+        <div className="ml-3 flex min-w-0 flex-1 items-center justify-between gap-2">
+          <span className="truncate text-sm font-medium">{label}</span>
+          {count !== undefined ? <Badge variant={isActive ? 'primary' : 'default'}>{count}</Badge> : null}
+        </div>
+      ) : null}
 
-      {/* 折叠状态下的悬停提示 */}
-      {collapsed && !disabled && (
-        <div className="absolute left-full ml-2 px-2 py-1 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50">
+      {collapsed && !disabled ? (
+        <div className="pointer-events-none absolute left-full z-50 ml-2 whitespace-nowrap rounded-md border border-border bg-popover px-2 py-1 text-xs text-popover-foreground opacity-0 shadow-md transition-opacity group-hover:opacity-100">
           {label}
         </div>
-      )}
+      ) : null}
     </Link>
   );
 }
