@@ -6,6 +6,7 @@ import Button from '@/components/ui/Button';
 import FeedList from '@/components/feeds/FeedList';
 import FeedSettingsModal from '@/components/feeds/FeedSettingsModal';
 import DeleteFeedConfirm from '@/components/feeds/DeleteFeedConfirm';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { fetchFeeds, updateFeed, deleteFeed as deleteFeedAPI, Feed } from '@/lib/api/feeds';
 
 export default function FeedsPage() {
@@ -84,7 +85,7 @@ export default function FeedsPage() {
   if (loading) {
     return (
       <div className="flex justify-center py-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+        <LoadingSpinner size="lg" />
       </div>
     );
   }
@@ -92,10 +93,10 @@ export default function FeedsPage() {
   if (error) {
     return (
       <div className="text-center py-8">
-        <p className="text-red-600 mb-4">{error}</p>
+        <p className="text-destructive mb-4">{error}</p>
         <button
           onClick={() => window.location.reload()}
-          className="text-blue-600 hover:underline"
+          className="text-primary hover:underline"
         >
           重新加载
         </button>
@@ -106,7 +107,7 @@ export default function FeedsPage() {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">我的订阅</h1>
+        <h1 className="text-2xl font-bold text-foreground">我的订阅</h1>
         <Link href="/feeds/add">
           <Button>
             <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

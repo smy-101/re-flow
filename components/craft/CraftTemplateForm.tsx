@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
   CraftTemplate,
@@ -10,6 +10,7 @@ import {
 } from '@/lib/api/craft-templates';
 import { getAIConfigs } from '@/lib/api/ai-configs';
 import Button from '@/components/ui/Button';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import PromptEditor from './PromptEditor';
 import type { AIConfig } from '@/lib/api/ai-configs';
 import type { PresetTemplate } from '@/lib/craft-templates/presets';
@@ -19,7 +20,7 @@ interface CraftTemplateFormProps {
   isEditing?: boolean;
 }
 
-export default function CraftTemplateForm({
+function CraftTemplateFormInner({
   template,
   isEditing = false,
 }: CraftTemplateFormProps) {
@@ -127,14 +128,14 @@ export default function CraftTemplateForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+        <div className="rounded-lg border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">
           {error}
         </div>
       )}
 
       <div>
-        <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
-          模板名称 <span className="text-red-500">*</span>
+        <label htmlFor="name" className="mb-2 block text-sm font-medium text-foreground">
+          模板名称 <span className="text-destructive">*</span>
         </label>
         <input
           id="name"
@@ -142,18 +143,18 @@ export default function CraftTemplateForm({
           value={formData.name}
           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
           placeholder="输入模板名称（3-50字符）"
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          className="w-full rounded-lg border border-input bg-background px-3 py-2 text-foreground outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20"
           required
           minLength={3}
           maxLength={50}
         />
-        <p className="mt-1 text-xs text-gray-500">
+        <p className="mt-1 text-xs text-muted-foreground">
           {formData.name.length}/50 字符
         </p>
       </div>
 
       <div>
-        <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
+        <label htmlFor="description" className="mb-2 block text-sm font-medium text-foreground">
           模板描述
         </label>
         <textarea
@@ -162,12 +163,12 @@ export default function CraftTemplateForm({
           onChange={(e) => setFormData({ ...formData, description: e.target.value })}
           placeholder="输入模板描述（可选）"
           rows={3}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          className="w-full rounded-lg border border-input bg-background px-3 py-2 text-foreground outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20"
         />
       </div>
 
       <div>
-        <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-2">
+        <label htmlFor="category" className="mb-2 block text-sm font-medium text-foreground">
           分类
         </label>
         <select
@@ -179,7 +180,7 @@ export default function CraftTemplateForm({
               category: e.target.value as CraftTemplate['category'],
             })
           }
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          className="w-full rounded-lg border border-input bg-background px-3 py-2 text-foreground outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20"
         >
           {CATEGORY_OPTIONS.map((option) => (
             <option key={option.value} value={option.value}>
@@ -190,28 +191,13 @@ export default function CraftTemplateForm({
       </div>
 
       <div>
-        <label htmlFor="aiConfigId" className="block text-sm font-medium text-gray-700 mb-2">
-          关联 AI 配置 <span className="text-red-500">*</span>
+        <label htmlFor="aiConfigId" className="mb-2 block text-sm font-medium text-foreground">
+          关联 AI 配置 <span className="text-destructive">*</span>
         </label>
         {loadingAiConfigs ? (
-          <div className="flex items-center text-gray-500">
-            <svg className="animate-spin h-4 w-4 mr-2" viewBox="0 0 24 24">
-              <circle
-                className="opacity-25"
-                cx="12"
-                cy="12"
-                r="10"
-                stroke="currentColor"
-                strokeWidth="4"
-                fill="none"
-              />
-              <path
-                className="opacity-75"
-                fill="currentColor"
-                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-              />
-            </svg>
-            加载 AI 配置...
+          <div className="flex items-center text-muted-foreground">
+            <LoadingSpinner size="sm" />
+            <span className="ml-2">加载 AI 配置...</span>
           </div>
         ) : (
           <>
@@ -224,7 +210,7 @@ export default function CraftTemplateForm({
                   aiConfigId: Number.parseInt(e.target.value, 10),
                 })
               }
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full rounded-lg border border-input bg-background px-3 py-2 text-foreground outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20"
               required
             >
               <option value={0}>选择 AI 配置</option>
@@ -236,7 +222,7 @@ export default function CraftTemplateForm({
               ))}
             </select>
             {aiConfigs.length === 0 && (
-              <p className="mt-1 text-xs text-red-600">
+              <p className="mt-1 text-xs text-destructive">
                 还没有 AI 配置，请先
                 <a href="/settings/ai" className="underline">
                   创建 AI 配置
@@ -253,7 +239,7 @@ export default function CraftTemplateForm({
         placeholder="输入 Prompt 模板，使用 {{variable}} 插入变量..."
       />
 
-      <div className="flex gap-3 pt-4 border-t border-gray-200">
+      <div className="flex gap-3 border-t border-border pt-4">
         <Button
           type="button"
           variant="secondary"
@@ -272,5 +258,13 @@ export default function CraftTemplateForm({
         </Button>
       </div>
     </form>
+  );
+}
+
+export default function CraftTemplateForm(props: CraftTemplateFormProps) {
+  return (
+    <Suspense fallback={<div className="flex justify-center py-8"><LoadingSpinner size="lg" /></div>}>
+      <CraftTemplateFormInner {...props} />
+    </Suspense>
   );
 }

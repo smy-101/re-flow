@@ -2,7 +2,9 @@
 
 import type { AIConfig, PresetProvider } from '@/lib/api/ai-configs';
 import { useState } from 'react';
+import { Bot } from 'lucide-react';
 import Button from '@/components/ui/Button';
+import Card from '@/components/ui/Card';
 import { AIConfigCard } from './AIConfigCard';
 import { AIConfigModal } from './AIConfigModal';
 import {
@@ -145,15 +147,21 @@ export function AIConfigList({
 
   if (configs.length === 0) {
     return (
-      <div className="text-center py-12">
-        <div className="mb-4 text-4xl">🤖</div>
-        <h3 className="mb-2 text-lg font-semibold text-gray-900">
-          还没有 AI 配置
-        </h3>
-        <p className="mb-6 text-gray-600">
-          添加您的第一个 AI 配置来开始使用 AI 功能
-        </p>
-        <Button onClick={openNewConfigModal}>添加配置</Button>
+      <>
+        <Card className="border-border/70 bg-card/95">
+          <div className="py-14 text-center">
+            <div className="mx-auto mb-4 flex size-14 items-center justify-center rounded-2xl bg-muted">
+              <Bot className="size-7 text-muted-foreground" />
+            </div>
+            <h3 className="mb-2 text-lg font-semibold text-foreground">
+              还没有 AI 配置
+            </h3>
+            <p className="mx-auto mb-6 max-w-md text-sm text-muted-foreground">
+              添加您的第一个 AI 配置来开始使用 AI 功能
+            </p>
+            <Button onClick={openNewConfigModal}>添加配置</Button>
+          </div>
+        </Card>
 
         {/* Modal */}
         <AIConfigModal
@@ -168,7 +176,7 @@ export function AIConfigList({
           onTest={editingConfig ? () => handleTest(editingConfig) : undefined}
           isTesting={testingConfigId === editingConfig?.id}
         />
-      </div>
+      </>
     );
   }
 
@@ -176,15 +184,12 @@ export function AIConfigList({
     <div>
       {/* Header */}
       <div className="mb-6 flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-gray-900">
-          AI 配置 ({configs.length})
-        </h2>
         <Button onClick={openNewConfigModal}>添加配置</Button>
       </div>
 
       {/* Error message */}
       {error && (
-        <div className="mb-4 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="mb-4 rounded-lg border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">
           {error}
         </div>
       )}

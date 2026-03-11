@@ -1,14 +1,14 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import AuthShell from '@/components/auth/AuthShell';
 import Alert, { AlertDescription, AlertTitle } from '@/components/ui/Alert';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [formData, setFormData] = useState({
@@ -92,6 +92,62 @@ export default function LoginPage() {
   };
 
   return (
+    <div className="space-y-4">
+      {notice ? (
+        <Alert variant="success">
+          <AlertTitle>状态更新</AlertTitle>
+          <AlertDescription>{notice}</AlertDescription>
+        </Alert>
+      ) : null}
+
+      {errors.form ? (
+        <Alert variant="destructive">
+          <AlertTitle>登录失败</AlertTitle>
+          <AlertDescription>{errors.form}</AlertDescription>
+        </Alert>
+      ) : null}
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <Input
+          id="email"
+          name="email"
+          type="email"
+          autoComplete="email"
+          label="邮箱"
+          placeholder="请输入邮箱"
+          value={formData.email}
+          onChange={handleChange}
+          error={errors.email}
+        />
+
+        <Input
+          id="password"
+          name="password"
+          type="password"
+          autoComplete="current-password"
+          label="密码"
+          placeholder="请输入密码"
+          value={formData.password}
+          onChange={handleChange}
+          error={errors.password}
+        />
+
+        <div className="flex justify-end">
+          <Link href="/forgot-password" className="text-sm font-medium text-primary transition-colors hover:text-primary/80">
+            忘记密码？
+          </Link>
+        </div>
+
+        <Button type="submit" loading={isLoading} fullWidth>
+          登录
+        </Button>
+      </form>
+    </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
     <AuthShell
       title="登录"
       description="继续访问您的订阅与阅读工作流。登录后会直接回到仪表盘。"
@@ -104,57 +160,9 @@ export default function LoginPage() {
         </p>
       }
     >
-      <div className="space-y-4">
-        {notice ? (
-          <Alert variant="success">
-            <AlertTitle>状态更新</AlertTitle>
-            <AlertDescription>{notice}</AlertDescription>
-          </Alert>
-        ) : null}
-
-        {errors.form ? (
-          <Alert variant="destructive">
-            <AlertTitle>登录失败</AlertTitle>
-            <AlertDescription>{errors.form}</AlertDescription>
-          </Alert>
-        ) : null}
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <Input
-            id="email"
-            name="email"
-            type="email"
-            autoComplete="email"
-            label="邮箱"
-            placeholder="请输入邮箱"
-            value={formData.email}
-            onChange={handleChange}
-            error={errors.email}
-          />
-
-          <Input
-            id="password"
-            name="password"
-            type="password"
-            autoComplete="current-password"
-            label="密码"
-            placeholder="请输入密码"
-            value={formData.password}
-            onChange={handleChange}
-            error={errors.password}
-          />
-
-          <div className="flex justify-end">
-            <Link href="/forgot-password" className="text-sm font-medium text-primary transition-colors hover:text-primary/80">
-              忘记密码？
-            </Link>
-          </div>
-
-          <Button type="submit" loading={isLoading} fullWidth>
-            登录
-          </Button>
-        </form>
-      </div>
+      <Suspense fallback={<div className="py-8 text-center text-muted-foreground">加载中...</div>}>
+        <LoginForm />
+      </Suspense>
     </AuthShell>
   );
 }

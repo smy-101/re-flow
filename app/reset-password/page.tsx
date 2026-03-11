@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import AuthShell from '@/components/auth/AuthShell';
 import Alert, { AlertDescription, AlertTitle } from '@/components/ui/Alert';
@@ -13,7 +13,7 @@ const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MIN_PASSWORD_LENGTH = 8;
 const CODE_SEND_INTERVAL = 60;
 
-export default function ResetPasswordPage() {
+function ResetPasswordForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [formData, setFormData] = useState({
@@ -152,6 +152,91 @@ export default function ResetPasswordPage() {
   };
 
   return (
+    <div className="space-y-4">
+      {errors.form ? (
+        <Alert variant="destructive">
+          <AlertTitle>重置失败</AlertTitle>
+          <AlertDescription>{errors.form}</AlertDescription>
+        </Alert>
+      ) : null}
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <Input
+          id="email"
+          name="email"
+          type="email"
+          autoComplete="email"
+          label="邮箱"
+          placeholder="请输入注册邮箱"
+          value={formData.email}
+          onChange={handleChange}
+          error={errors.email}
+        />
+
+        <div className="space-y-2">
+          <label htmlFor="code" className="block text-sm font-medium text-foreground">
+            验证码
+          </label>
+          <div className="flex items-start gap-2">
+            <Input
+              id="code"
+              name="code"
+              type="text"
+              inputMode="numeric"
+              maxLength={6}
+              placeholder="6 位数字验证码"
+              value={formData.code}
+              onChange={handleChange}
+              error={errors.code}
+              containerClassName="flex-1"
+            />
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={handleSendCode}
+              disabled={isSendingCode || countdown > 0}
+              loading={isSendingCode}
+              className="mt-0 min-w-32"
+            >
+              {countdown > 0 ? `${countdown} 秒` : '发送验证码'}
+            </Button>
+          </div>
+        </div>
+
+        <Input
+          id="newPassword"
+          name="newPassword"
+          type="password"
+          autoComplete="new-password"
+          label="新密码"
+          placeholder="至少 8 个字符"
+          value={formData.newPassword}
+          onChange={handleChange}
+          error={errors.newPassword}
+        />
+
+        <Input
+          id="confirmPassword"
+          name="confirmPassword"
+          type="password"
+          autoComplete="new-password"
+          label="确认新密码"
+          placeholder="再次输入新密码"
+          value={formData.confirmPassword}
+          onChange={handleChange}
+          error={errors.confirmPassword}
+        />
+
+        <Button type="submit" loading={isLoading} fullWidth>
+          更新密码
+        </Button>
+      </form>
+    </div>
+  );
+}
+
+export default function ResetPasswordPage() {
+  return (
     <AuthShell
       title="重置密码"
       description="验证邮箱和验证码后，设置新的登录密码。"
@@ -164,86 +249,9 @@ export default function ResetPasswordPage() {
         </p>
       }
     >
-      <div className="space-y-4">
-        {errors.form ? (
-          <Alert variant="destructive">
-            <AlertTitle>重置失败</AlertTitle>
-            <AlertDescription>{errors.form}</AlertDescription>
-          </Alert>
-        ) : null}
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <Input
-            id="email"
-            name="email"
-            type="email"
-            autoComplete="email"
-            label="邮箱"
-            placeholder="请输入注册邮箱"
-            value={formData.email}
-            onChange={handleChange}
-            error={errors.email}
-          />
-
-          <div className="space-y-2">
-            <label htmlFor="code" className="block text-sm font-medium text-foreground">
-              验证码
-            </label>
-            <div className="flex items-start gap-2">
-              <Input
-                id="code"
-                name="code"
-                type="text"
-                inputMode="numeric"
-                maxLength={6}
-                placeholder="6 位数字验证码"
-                value={formData.code}
-                onChange={handleChange}
-                error={errors.code}
-                containerClassName="flex-1"
-              />
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={handleSendCode}
-                disabled={isSendingCode || countdown > 0}
-                loading={isSendingCode}
-                className="mt-0 min-w-32"
-              >
-                {countdown > 0 ? `${countdown} 秒` : '发送验证码'}
-              </Button>
-            </div>
-          </div>
-
-          <Input
-            id="newPassword"
-            name="newPassword"
-            type="password"
-            autoComplete="new-password"
-            label="新密码"
-            placeholder="至少 8 个字符"
-            value={formData.newPassword}
-            onChange={handleChange}
-            error={errors.newPassword}
-          />
-
-          <Input
-            id="confirmPassword"
-            name="confirmPassword"
-            type="password"
-            autoComplete="new-password"
-            label="确认新密码"
-            placeholder="再次输入新密码"
-            value={formData.confirmPassword}
-            onChange={handleChange}
-            error={errors.confirmPassword}
-          />
-
-          <Button type="submit" loading={isLoading} fullWidth>
-            更新密码
-          </Button>
-        </form>
-      </div>
+      <Suspense fallback={<div className="py-8 text-center text-muted-foreground">加载中...</div>}>
+        <ResetPasswordForm />
+      </Suspense>
     </AuthShell>
   );
 }

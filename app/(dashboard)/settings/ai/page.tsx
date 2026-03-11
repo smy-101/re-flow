@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { AIConfigList } from '@/components/ai/AIConfigList';
 import { PRESET_PROVIDERS } from '@/lib/ai/providers';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { getAIConfigs, type AIConfig } from '@/lib/api/ai-configs';
 
 export default function AIPage() {
@@ -29,35 +30,31 @@ export default function AIPage() {
 
   if (loading) {
     return (
-      <div className="container mx-auto max-w-7xl px-4 py-8">
-        <div className="flex justify-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
-        </div>
+      <div className="flex justify-center py-12">
+        <LoadingSpinner size="lg" />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="container mx-auto max-w-7xl px-4 py-8">
-        <div className="text-center py-8">
-          <p className="text-red-600 mb-4">{error}</p>
-          <button
-            onClick={() => window.location.reload()}
-            className="text-blue-600 hover:underline"
-          >
-            重新加载
-          </button>
-        </div>
+      <div className="text-center py-8">
+        <p className="text-destructive mb-4">{error}</p>
+        <button
+          onClick={() => window.location.reload()}
+          className="text-primary hover:underline"
+        >
+          重新加载
+        </button>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto max-w-7xl px-4 py-8">
+    <div className="space-y-6">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">AI 设置</h1>
-        <p className="text-gray-600">
+        <h1 className="text-3xl font-bold text-foreground">AI 设置</h1>
+        <p className="text-muted-foreground">
           管理您的 AI 提供商配置，用于后续的 RSS 内容处理功能
         </p>
       </div>
