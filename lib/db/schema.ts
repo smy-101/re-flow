@@ -190,6 +190,42 @@ export const craftTemplates = sqliteTable(
 export type CraftTemplate = typeof craftTemplates.$inferSelect;
 export type NewCraftTemplate = typeof craftTemplates.$inferInsert;
 
+export const mcpTokens = sqliteTable(
+  'mcp_tokens',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    userId: integer('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    name: text('name').notNull(),
+    tokenPrefix: text('token_prefix').notNull(),
+    tokenHash: text('token_hash').notNull().unique(),
+    feedWhitelist: text('feed_whitelist'),
+    timeWindowDays: integer('time_window_days'),
+    allowRawFallback: integer('allow_raw_fallback', { mode: 'boolean' })
+      .notNull()
+      .default(true),
+    isEnabled: integer('is_enabled', { mode: 'boolean' })
+      .notNull()
+      .default(true),
+    lastUsedAt: integer('last_used_at'),
+    createdAt: integer('created_at')
+      .notNull()
+      .default(sql`(strftime('%s', 'now'))`),
+    updatedAt: integer('updated_at')
+      .notNull()
+      .default(sql`(strftime('%s', 'now'))`),
+  },
+  (table) => ({
+    userIdIdx: index('mcp_tokens_user_id_idx').on(table.userId),
+    tokenHashIdx: index('mcp_tokens_token_hash_idx').on(table.tokenHash),
+    enabledIdx: index('mcp_tokens_is_enabled_idx').on(table.isEnabled),
+  }),
+);
+
+export type MCPToken = typeof mcpTokens.$inferSelect;
+export type NewMCPToken = typeof mcpTokens.$inferInsert;
+
 export const pipelines = sqliteTable(
   'pipelines',
   {
@@ -313,6 +349,7 @@ export const usersRelations = relations(users, ({ many }) => ({
   feedItems: many(feedItems),
   aiConfigs: many(aiConfigs),
   craftTemplates: many(craftTemplates),
+  mcpTokens: many(mcpTokens),
   pipelines: many(pipelines),
   processingResults: many(processingResults),
   processingQueue: many(processingQueue),
@@ -362,6 +399,13 @@ export const craftTemplatesRelations = relations(craftTemplates, ({ one }) => ({
   aiConfig: one(aiConfigs, {
     fields: [craftTemplates.aiConfigId],
     references: [aiConfigs.id],
+  }),
+}));
+
+export const mcpTokensRelations = relations(mcpTokens, ({ one }) => ({
+  user: one(users, {
+    fields: [mcpTokens.userId],
+    references: [users.id],
   }),
 }));
 

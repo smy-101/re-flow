@@ -1,6 +1,6 @@
-import { type LucideIcon, Folder, BookOpen, Pin, Settings, FileText, GitBranch, ArrowRightLeft } from 'lucide-react';
+import { type LucideIcon, Folder, BookOpen, Pin, Settings, FileText, GitBranch, ArrowRightLeft, KeyRound } from 'lucide-react';
 
-export type NavigationItemId = 'feeds' | 'items' | 'favorites' | 'ai' | 'craft' | 'pipelines' | 'relay';
+export type NavigationItemId = 'feeds' | 'items' | 'favorites' | 'ai' | 'craft' | 'pipelines' | 'mcp' | 'relay';
 
 export interface NavigationItem {
   id: NavigationItemId;
@@ -49,6 +49,12 @@ export const navigationItems: NavigationItem[] = [
     icon: GitBranch,
   },
   {
+    id: 'mcp',
+    label: 'MCP Tokens',
+    href: '/settings/mcp',
+    icon: KeyRound,
+  },
+  {
     id: 'relay',
     label: '中转',
     href: '/relay',
@@ -59,6 +65,8 @@ export const navigationItems: NavigationItem[] = [
 
 // 获取当前激活的导航项
 export function getActiveNavigationItem(pathname: string): NavigationItemId | null {
-  const activeItem = navigationItems.find((item) => pathname === item.href);
+  const activeItem = navigationItems.find((item) => (
+    pathname === item.href || pathname.startsWith(`${item.href}/`)
+  ));
   return activeItem?.id || null;
 }

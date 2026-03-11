@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest --run",
+    "worker:mcp": "tsx workers/remote-rss-mcp.ts",
     "worker:rss": "tsx workers/rss-worker.ts",
     "worker:processing": "tsx workers/processing-worker.ts"
   },
@@ -17,6 +18,7 @@
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
+    "@modelcontextprotocol/sdk": "^1.27.1",
     "ai": "^6.0.116",
     "bcrypt": "^6.0.0",
     "better-sqlite3": "^12.6.2",
@@ -29,7 +31,8 @@
     "nodemailer": "^8.0.2",
     "react": "19.2.3",
     "react-dom": "19.2.3",
-    "rss-parser": "^3.13.0"
+    "rss-parser": "^3.13.0",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
