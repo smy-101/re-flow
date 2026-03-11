@@ -48,21 +48,19 @@ export function AIConfigCard({
   };
 
   return (
-    <div className="relative rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+    <div className="relative rounded-lg border border-border bg-card p-4 shadow-sm transition-shadow hover:shadow-md">
       {/* Header */}
       <div className="mb-3 flex items-start justify-between">
         <div className="flex flex-col gap-2">
           <div className="flex items-center gap-2">
-            {config.isDefault && <span className="text-lg">⭐</span>}
-            <h3 className="text-base font-semibold text-gray-900">{config.name}</h3>
+            {config.isDefault ? <span className="text-lg">⭐</span> : null}
+            <h3 className="text-base font-semibold text-foreground">{config.name}</h3>
           </div>
           <div className="flex items-center gap-3">
-            <span
-              className={`rounded bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700`}
-            >
+            <span className="rounded bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
               {providerName}
             </span>
-            <span className="text-sm text-gray-600">
+            <span className="text-sm text-muted-foreground">
               Model: {config.model}
             </span>
           </div>
@@ -72,37 +70,37 @@ export function AIConfigCard({
           <button
             type="button"
             onClick={() => setShowMenu(!showMenu)}
-            className="rounded p-1 text-gray-500 hover:bg-gray-100"
+            className="rounded p-1 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
             aria-label="更多操作"
           >
             ⋮
           </button>
 
-          {showMenu && (
-            <div className="absolute right-0 top-full z-10 mt-1 w-36 rounded-lg border border-gray-200 bg-white shadow-lg">
+          {showMenu ? (
+            <div className="absolute right-0 top-full z-10 mt-1 w-36 rounded-lg border border-border bg-popover shadow-lg">
               <div className="py-1">
-                {!config.isDefault && (
+                {!config.isDefault ? (
                   <button
                     type="button"
                     onClick={handleSetDefault}
-                    className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
+                    className="block w-full px-4 py-2 text-left text-sm text-foreground transition-colors hover:bg-secondary"
                   >
                     设为默认
                   </button>
-                )}
+                ) : null}
                 <button
                   type="button"
                   onClick={() => {
                     setShowMenu(false);
                     setShowDeleteConfirm(true);
                   }}
-                  className="block w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-gray-50"
+                  className="block w-full px-4 py-2 text-left text-sm text-destructive transition-colors hover:bg-secondary"
                 >
                   删除
                 </button>
               </div>
             </div>
-          )}
+          ) : null}
         </div>
       </div>
 
@@ -117,10 +115,10 @@ export function AIConfigCard({
           <button
             type="button"
             onClick={() => onToggle(config)}
-            className={`rounded px-2 py-1 text-xs font-medium ${
+            className={`rounded px-2 py-1 text-xs font-medium transition-colors ${
               config.isEnabled
-                ? 'bg-green-50 text-green-700'
-                : 'bg-gray-50 text-gray-600'
+                ? 'bg-success/10 text-success'
+                : 'bg-muted text-muted-foreground'
             }`}
           >
             {config.isEnabled ? '启用 ✓' : '禁用'}
@@ -130,7 +128,7 @@ export function AIConfigCard({
 
       {/* Actions */}
       <div className="flex items-center justify-between">
-        <span className="text-sm text-gray-500">
+        <span className="text-sm text-muted-foreground">
           Created: {formatDateTimestamp(config.createdAt)}
         </span>
         <TestConfigButton
@@ -150,13 +148,13 @@ export function AIConfigCard({
       </div>
 
       {/* Delete confirmation */}
-      {showDeleteConfirm && (
-        <div className="absolute inset-0 z-20 flex items-center justify-center rounded-lg bg-white/90 backdrop-blur-sm">
-          <div className="w-80 rounded-lg border border-gray-200 bg-white p-4 shadow-lg">
-            <h4 className="mb-2 text-base font-semibold text-gray-900">
+      {showDeleteConfirm ? (
+        <div className="absolute inset-0 z-20 flex items-center justify-center rounded-lg bg-card/90 backdrop-blur-sm">
+          <div className="w-80 rounded-lg border border-border bg-popover p-4 shadow-lg">
+            <h4 className="mb-2 text-base font-semibold text-foreground">
               确认删除
             </h4>
-            <p className="mb-4 text-sm text-gray-600">
+            <p className="mb-4 text-sm text-muted-foreground">
               确定要删除配置「{config.name}」吗？此操作无法撤销。
             </p>
             <div className="flex justify-end gap-2">
@@ -179,7 +177,7 @@ export function AIConfigCard({
             </div>
           </div>
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

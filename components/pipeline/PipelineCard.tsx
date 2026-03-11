@@ -4,6 +4,7 @@ import { Pipeline } from '@/lib/api/pipelines';
 import Button from '@/components/ui/Button';
 import Link from 'next/link';
 import { formatTimestamp } from '@/lib/time/timestamp';
+import { ChevronRight } from 'lucide-react';
 
 interface PipelineCardProps {
   pipeline: Pipeline;
@@ -23,19 +24,19 @@ export default function PipelineCard({
   const stepCount = pipeline.steps.length;
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow p-5">
-      <div className="flex items-start justify-between mb-3">
-        <div className="flex-1">
-          <h3 className="text-lg font-semibold text-gray-900 mb-1">
+    <div className="rounded-lg border border-border bg-card p-5 shadow-sm transition-shadow hover:shadow-md">
+      <div className="mb-3 flex items-start justify-between">
+        <div className="min-w-0 flex-1">
+          <h3 className="mb-1 text-lg font-semibold text-foreground">
             {pipeline.name}
           </h3>
           <div className="flex items-center gap-2 text-sm">
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+            <span className="inline-flex items-center rounded-full bg-purple-500/10 px-2.5 py-0.5 text-xs font-medium text-purple-500">
               {stepCount} 个步骤
             </span>
           </div>
         </div>
-        <div className="flex gap-2 ml-4">
+        <div className="ml-4 flex gap-2">
           <Link href={`/settings/pipelines/${pipeline.id}/edit`}>
             <Button variant="secondary" size="sm">
               编辑
@@ -46,40 +47,28 @@ export default function PipelineCard({
           </Button>
         </div>
       </div>
-      {pipeline.description && (
-        <p className="text-gray-600 text-sm mb-3">{pipeline.description}</p>
-      )}
+      {pipeline.description ? (
+        <p className="mb-3 text-sm text-muted-foreground">{pipeline.description}</p>
+      ) : null}
 
       {/* Pipeline visualization */}
-      <div className="bg-gray-50 rounded p-3">
-        <p className="text-gray-700 font-medium mb-2 text-sm">处理流程:</p>
-        <div className="flex items-center gap-2 flex-wrap">
+      <div className="rounded bg-muted p-3">
+        <p className="mb-2 text-sm font-medium text-foreground">处理流程:</p>
+        <div className="flex flex-wrap items-center gap-2">
           {pipeline.steps.map((step, index) => (
             <div key={index} className="flex items-center">
-              <span className="inline-flex items-center px-2.5 py-1 rounded text-xs font-medium bg-white border border-gray-200 text-gray-700">
+              <span className="inline-flex items-center rounded border border-border bg-card px-2.5 py-1 text-xs font-medium text-foreground">
                 {index + 1}. {step.name}
               </span>
-              {index < pipeline.steps.length - 1 && (
-                <svg
-                  className="w-4 h-4 mx-1 text-gray-400"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 5l7 7-7 7"
-                  />
-                </svg>
-              )}
+              {index < pipeline.steps.length - 1 ? (
+                <ChevronRight className="mx-1 h-4 w-4 text-muted-foreground" />
+              ) : null}
             </div>
           ))}
         </div>
       </div>
 
-      <div className="mt-3 text-xs text-gray-400">
+      <div className="mt-3 text-xs text-muted-foreground">
         创建于: {formatTimestamp(pipeline.createdAt)}
       </div>
     </div>

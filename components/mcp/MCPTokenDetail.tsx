@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
+import { ArrowLeft } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import {
   deleteMCPToken,
@@ -38,23 +39,23 @@ export default function MCPTokenDetail({ tokenId }: MCPTokenDetailProps) {
   }, [loadToken]);
 
   if (loading) {
-    return <div className="py-10 text-sm text-gray-500">正在加载 token 详情...</div>;
+    return <div className="py-10 text-sm text-muted-foreground">正在加载 token 详情...</div>;
   }
 
   if (error) {
-    return <div className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>;
+    return <div className="rounded-xl bg-destructive/10 px-4 py-3 text-sm text-destructive">{error}</div>;
   }
 
   if (!token) {
-    return <div className="rounded-xl bg-gray-100 px-4 py-3 text-sm text-gray-600">Token 不存在。</div>;
+    return <div className="rounded-xl bg-muted px-4 py-3 text-sm text-muted-foreground">Token 不存在。</div>;
   }
 
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">{token.name}</h1>
-          <p className="mt-2 font-mono text-xs text-gray-500">{token.tokenPrefix}...</p>
+          <h1 className="text-3xl font-bold text-foreground">{token.name}</h1>
+          <p className="mt-2 font-mono text-xs text-muted-foreground">{token.tokenPrefix}...</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Button type="button" variant="secondary" onClick={async () => {
@@ -72,32 +73,32 @@ export default function MCPTokenDetail({ tokenId }: MCPTokenDetailProps) {
         </div>
       </div>
 
-      <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
-        <dl className="grid gap-4 text-sm text-gray-700 dark:text-gray-300 md:grid-cols-2">
+      <section className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+        <dl className="grid gap-4 text-sm text-foreground md:grid-cols-2">
           <div>
-            <dt className="text-xs uppercase tracking-wide text-gray-500">状态</dt>
+            <dt className="text-xs uppercase tracking-wide text-muted-foreground">状态</dt>
             <dd className="mt-1 font-medium">{token.isEnabled ? '已启用' : '已禁用'}</dd>
           </div>
           <div>
-            <dt className="text-xs uppercase tracking-wide text-gray-500">最近使用</dt>
+            <dt className="text-xs uppercase tracking-wide text-muted-foreground">最近使用</dt>
             <dd className="mt-1 font-medium">{formatTimestamp(token.lastUsedAt) || '尚未使用'}</dd>
           </div>
           <div>
-            <dt className="text-xs uppercase tracking-wide text-gray-500">创建时间</dt>
+            <dt className="text-xs uppercase tracking-wide text-muted-foreground">创建时间</dt>
             <dd className="mt-1 font-medium">{formatTimestamp(token.createdAt) || '未知'}</dd>
           </div>
           <div>
-            <dt className="text-xs uppercase tracking-wide text-gray-500">更新时间</dt>
+            <dt className="text-xs uppercase tracking-wide text-muted-foreground">更新时间</dt>
             <dd className="mt-1 font-medium">{formatTimestamp(token.updatedAt) || '未知'}</dd>
           </div>
         </dl>
       </section>
 
-      <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">权限边界</h2>
-        <dl className="mt-4 grid gap-4 text-sm text-gray-700 dark:text-gray-300 md:grid-cols-3">
+      <section className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+        <h2 className="text-lg font-semibold text-foreground">权限边界</h2>
+        <dl className="mt-4 grid gap-4 text-sm text-foreground md:grid-cols-3">
           <div>
-            <dt className="text-xs uppercase tracking-wide text-gray-500">Feed 白名单</dt>
+            <dt className="text-xs uppercase tracking-wide text-muted-foreground">Feed 白名单</dt>
             <dd className="mt-1 font-medium">
               {token.scope.feedIds && token.scope.feedIds.length > 0
                 ? token.scope.feedIds.join(', ')
@@ -105,19 +106,20 @@ export default function MCPTokenDetail({ tokenId }: MCPTokenDetailProps) {
             </dd>
           </div>
           <div>
-            <dt className="text-xs uppercase tracking-wide text-gray-500">时间窗口</dt>
+            <dt className="text-xs uppercase tracking-wide text-muted-foreground">时间窗口</dt>
             <dd className="mt-1 font-medium">
               {token.scope.timeWindowDays ? `${token.scope.timeWindowDays} 天` : '不限制'}
             </dd>
           </div>
           <div>
-            <dt className="text-xs uppercase tracking-wide text-gray-500">原文回退</dt>
+            <dt className="text-xs uppercase tracking-wide text-muted-foreground">原文回退</dt>
             <dd className="mt-1 font-medium">{token.scope.allowRawFallback ? '允许' : '禁止'}</dd>
           </div>
         </dl>
       </section>
 
-      <Link href="/settings/mcp" className="inline-flex text-sm text-blue-600 hover:underline">
+      <Link href="/settings/mcp" className="inline-flex items-center text-sm text-primary hover:underline">
+        <ArrowLeft className="mr-1 h-4 w-4" />
         返回 MCP Token 列表
       </Link>
     </div>
