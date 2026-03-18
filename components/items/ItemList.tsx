@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { FileText, TriangleAlert } from 'lucide-react';
 import ItemCard from './ItemCard';
@@ -102,18 +102,24 @@ export default function ItemList({
     }
   };
 
-  // Sort items
-  const sortedItems = [...items].sort((a, b) => {
-    if (sortBy === 'newest') {
-      return b.publishedAt - a.publishedAt;
-    } else {
-      return a.publishedAt - b.publishedAt;
-    }
-  });
+  // Sort items with memoization to avoid re-sorting on every render
+  const sortedItems = useMemo(() => {
+    return [...items].sort((a, b) => {
+      if (sortBy === 'newest') {
+        return b.publishedAt - a.publishedAt;
+      } else {
+        return a.publishedAt - b.publishedAt;
+      }
+    });
+  }, [items, sortBy]);
+
+  // Memoize feed lookup map for O(1) access
+  const feedMap = useMemo(() => {
+    return new Map(feeds.map((f) => [f.id, f.title]));
+  }, [feeds]);
 
   const getFeedTitle = (feedId: number) => {
-    const feed = feeds.find((f) => f.id === feedId);
-    return feed?.title;
+    return feedMap.get(feedId);
   };
 
   if (loading) {

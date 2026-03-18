@@ -1,7 +1,8 @@
 'use client';
 
 import type { AIConfig, PresetProvider } from '@/lib/api/ai-configs';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import { MoreVertical } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import { formatDateTimestamp } from '@/lib/time/timestamp';
 import { HealthStatusBadge } from './HealthStatusBadge';
@@ -33,8 +34,11 @@ export function AIConfigCard({
   const [showMenu, setShowMenu] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
-  const provider = presets.find((p) => p.id === config.providerId);
-  const providerName = provider?.name || config.providerType;
+  // Memoize provider lookup to avoid re-searching on every render
+  const providerName = useMemo(() => {
+    const provider = presets.find((p) => p.id === config.providerId);
+    return provider?.name || config.providerType;
+  }, [presets, config.providerId, config.providerType]);
 
   const handleSetDefault = () => {
     onSetDefault(config);
@@ -73,7 +77,7 @@ export function AIConfigCard({
             className="rounded p-1 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
             aria-label="更多操作"
           >
-            ⋮
+            <MoreVertical className="size-4" />
           </button>
 
           {showMenu ? (

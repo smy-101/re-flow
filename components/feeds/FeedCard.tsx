@@ -9,6 +9,7 @@ import Card from '@/components/ui/Card';
 import { toast } from '@/components/ui/Toast';
 import { cn } from '@/lib/utils';
 import { Feed, refreshFeed } from '@/lib/api/feeds';
+import { formatRelativeTime } from '@/lib/time/format-relative';
 
 interface FeedCardProps {
   feed: Feed;
@@ -19,23 +20,6 @@ interface FeedCardProps {
 export default function FeedCard({ feed, onRefresh, onOpenSettings }: FeedCardProps) {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const formatDate = (timestamp: number) => {
-    const date = new Date(timestamp * 1000);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-
-    if (diffDays === 0) {
-      return '今天';
-    } else if (diffDays === 1) {
-      return '昨天';
-    } else if (diffDays < 7) {
-      return `${diffDays} 天前`;
-    } else {
-      return date.toLocaleDateString('zh-CN');
-    }
-  };
 
   const handleRefresh = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -92,7 +76,7 @@ export default function FeedCard({ feed, onRefresh, onOpenSettings }: FeedCardPr
                 <p className="line-clamp-2 text-sm leading-6 text-muted-foreground">{feed.description}</p>
               ) : null}
               <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-                <span>最后更新 {formatDate(feed.lastUpdatedAt)}</span>
+                <span>最后更新 {formatRelativeTime(feed.lastUpdatedAt)}</span>
                 <span>{feed.feedUrl}</span>
               </div>
             </div>
