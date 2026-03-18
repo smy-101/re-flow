@@ -32,37 +32,120 @@ export default function SidebarItem({
     <Link
       href={href}
       className={cn(
-        'group relative flex w-full items-center rounded-lg border border-transparent px-3 py-2.5 transition-colors duration-200',
-        disabled ? 'cursor-not-allowed opacity-50' : 'hover:bg-secondary/70',
-        isActive
-          ? 'bg-sidebar-foreground/6 text-foreground'
-          : 'text-sidebar-foreground/82'
+        'group/item relative flex w-full items-center rounded-xl transition-all duration-300',
+        collapsed ? 'justify-center px-0 py-3' : 'px-3.5 py-3',
+        disabled
+          ? 'cursor-not-allowed opacity-40'
+          : 'hover:bg-sidebar-card/50 active:scale-[0.98]'
       )}
       aria-current={isCurrentPage ? 'page' : undefined}
       {...(disabled && { onClick: (e) => e.preventDefault(), tabIndex: -1 })}
     >
+      {/* Background card for active state */}
       {isActive ? (
-        <div className="absolute left-0 top-1/2 h-7 w-1 -translate-y-1/2 rounded-r-full bg-primary" />
+        <div
+          className={cn(
+            'absolute inset-0 rounded-xl transition-all duration-300',
+            'bg-gradient-to-r from-sidebar-accent/8 via-sidebar-card/80 to-sidebar-accent/5',
+            'backdrop-blur-sm border border-sidebar-accent/15',
+            'shadow-[0_2px_12px_hsl(var(--sidebar-glow)/0.08),inset_0_1px_0_hsl(var(--sidebar-card)/0.8)]'
+          )}
+        />
       ) : null}
 
-      <Icon
-        className={cn(
-          'shrink-0 transition-colors',
-          isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground'
-        )}
-        size={20}
-      />
+      {/* Hover background */}
+      {!disabled && !isActive ? (
+        <div
+          className={cn(
+            'absolute inset-0 rounded-xl border border-transparent opacity-0 transition-all duration-300',
+            'group-hover/item:opacity-100',
+            'group-hover/item:bg-sidebar-card/40 group-hover/item:border-sidebar-border/30',
+            'group-hover/item:shadow-sm'
+          )}
+        />
+      ) : null}
 
+      {/* Icon container */}
+      <div
+        className={cn(
+          'relative z-10 flex items-center justify-center transition-all duration-300',
+          collapsed ? 'h-9 w-9' : 'h-8 w-8',
+          isActive
+            ? 'text-sidebar-accent'
+            : 'text-sidebar-muted group-hover/item:text-sidebar-foreground'
+        )}
+      >
+        {/* Icon glow for active state */}
+        {isActive ? (
+          <div className="absolute inset-0 rounded-lg bg-sidebar-glow/20 blur-md" />
+        ) : null}
+        <Icon
+          size={collapsed ? 20 : 18}
+          strokeWidth={isActive ? 2 : 1.75}
+          className="relative z-10 transition-all duration-200"
+        />
+      </div>
+
+      {/* Label and count */}
       {!collapsed ? (
-        <div className="ml-3 flex min-w-0 flex-1 items-center justify-between gap-2">
-          <span className="truncate text-sm font-medium">{label}</span>
-          {count !== undefined ? <Badge variant={isActive ? 'primary' : 'default'}>{count}</Badge> : null}
+        <div className="relative z-10 ml-3 flex min-w-0 flex-1 items-center justify-between gap-2">
+          <span
+            className={cn(
+              'truncate text-sm font-medium transition-all duration-200',
+              isActive
+                ? 'text-sidebar-foreground'
+                : 'text-sidebar-muted group-hover/item:text-sidebar-foreground'
+            )}
+          >
+            {label}
+          </span>
+          {count !== undefined ? (
+            <Badge
+              variant={isActive ? 'primary' : 'default'}
+              className={cn(
+                'shrink-0 transition-all duration-200',
+                isActive
+                  ? 'bg-sidebar-accent/15 text-sidebar-accent hover:bg-sidebar-accent/20'
+                  : 'bg-sidebar-card/60 text-sidebar-muted'
+              )}
+            >
+              {count}
+            </Badge>
+          ) : null}
         </div>
       ) : null}
 
+      {/* Collapsed state - floating tooltip */}
       {collapsed && !disabled ? (
-        <div className="pointer-events-none absolute left-full z-50 ml-2 whitespace-nowrap rounded-md border border-border bg-popover px-2 py-1 text-xs text-popover-foreground opacity-0 shadow-md transition-opacity group-hover:opacity-100">
+        <div
+          className={cn(
+            'pointer-events-none absolute left-full z-50 ml-3 whitespace-nowrap',
+            'rounded-lg border border-sidebar-border/50 bg-sidebar-card/95 backdrop-blur-md',
+            'px-3 py-2 text-sm font-medium text-sidebar-foreground',
+            'opacity-0 shadow-lg shadow-black/5 transition-all duration-200',
+            'group-hover/item:ml-4 group-hover/item:opacity-100'
+          )}
+        >
           {label}
+          {/* Tooltip arrow */}
+          <div className="absolute left-0 top-1/2 -translate-x-1 -translate-y-1/2 border-4 border-transparent border-r-sidebar-border/50" />
+          <div className="absolute left-0 top-1/2 -translate-x-[2px] -translate-y-1/2 border-4 border-transparent border-r-sidebar-card/95" />
+        </div>
+      ) : null}
+
+      {/* Disabled overlay text for collapsed state */}
+      {collapsed && disabled ? (
+        <div
+          className={cn(
+            'pointer-events-none absolute left-full z-50 ml-3 whitespace-nowrap',
+            'rounded-lg border border-sidebar-border/30 bg-sidebar-card/90 backdrop-blur-md',
+            'px-3 py-2 text-sm text-sidebar-muted',
+            'opacity-0 transition-all duration-200',
+            'group-hover/item:ml-4 group-hover/item:opacity-60'
+          )}
+        >
+          {label}
+          <span className="ml-2 text-xs opacity-70">(即将推出)</span>
         </div>
       ) : null}
     </Link>

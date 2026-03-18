@@ -34,6 +34,11 @@
   --sidebar-foreground: 222 47% 11%;
   --sidebar-accent: 201 94% 32%;
   --sidebar-accent-foreground: 210 40% 98%;
+  --sidebar-glow: 201 94% 52%;
+  --sidebar-card: 0 0% 100%;
+  --sidebar-card-hover: 210 20% 98%;
+  --sidebar-border: 214 24% 88%;
+  --sidebar-muted: 215 16% 55%;
 }
 
 .dark {
@@ -67,6 +72,11 @@
   --sidebar-foreground: 210 40% 96%;
   --sidebar-accent: 191 85% 65%;
   --sidebar-accent-foreground: 222 47% 11%;
+  --sidebar-glow: 191 85% 55%;
+  --sidebar-card: 222 39% 13%;
+  --sidebar-card-hover: 222 35% 18%;
+  --sidebar-border: 217 19% 25%;
+  --sidebar-muted: 215 20% 55%;
 }
 
 @theme inline {
@@ -102,6 +112,11 @@
   --color-sidebar-foreground: hsl(var(--sidebar-foreground));
   --color-sidebar-accent: hsl(var(--sidebar-accent));
   --color-sidebar-accent-foreground: hsl(var(--sidebar-accent-foreground));
+  --color-sidebar-glow: hsl(var(--sidebar-glow));
+  --color-sidebar-card: hsl(var(--sidebar-card));
+  --color-sidebar-card-hover: hsl(var(--sidebar-card-hover));
+  --color-sidebar-border: hsl(var(--sidebar-border));
+  --color-sidebar-muted: hsl(var(--sidebar-muted));
   --radius-sm: calc(var(--radius) - 0.25rem);
   --radius-md: calc(var(--radius) - 0.125rem);
   --radius-lg: var(--radius);

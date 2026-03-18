@@ -2,9 +2,8 @@
 
 import type { AIConfig, PresetProvider } from '@/lib/api/ai-configs';
 import { useState } from 'react';
-import { Bot } from 'lucide-react';
+import { Bot, Plus, Sparkles } from 'lucide-react';
 import Button from '@/components/ui/Button';
-import Card from '@/components/ui/Card';
 import { AIConfigCard } from './AIConfigCard';
 import { AIConfigModal } from './AIConfigModal';
 import {
@@ -13,6 +12,7 @@ import {
   setDefaultConfig,
   testAIConfig,
 } from '@/lib/api/ai-configs';
+import { cn } from '@/lib/utils';
 
 interface AIConfigListProps {
   configs: AIConfig[];
@@ -145,25 +145,59 @@ export function AIConfigList({
     setError(null);
   };
 
+  // Empty state
   if (configs.length === 0) {
     return (
       <>
-        <Card className="border-border/70 bg-card/95">
-          <div className="py-14 text-center">
-            <div className="mx-auto mb-4 flex size-14 items-center justify-center rounded-2xl bg-muted">
-              <Bot className="size-7 text-muted-foreground" />
+        <div
+          className={cn(
+            'relative overflow-hidden rounded-2xl',
+            'border border-border/40 bg-card/70 backdrop-blur-xl',
+            'shadow-[0_2px_12px_rgba(0,0,0,0.04),0_1px_2px_rgba(0,0,0,0.02)]'
+          )}
+        >
+          {/* Decorative background */}
+          <div className="pointer-events-none absolute inset-0 z-0">
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/3" />
+            <div
+              className="absolute inset-0 opacity-[0.02]"
+              style={{
+                backgroundImage: `
+                  linear-gradient(hsl(var(--foreground)) 1px, transparent 1px),
+                  linear-gradient(90deg, hsl(var(--foreground)) 1px, transparent 1px)
+                `,
+                backgroundSize: '24px 24px',
+              }}
+            />
+            {/* Ambient glow */}
+            <div className="absolute left-1/2 top-1/2 h-64 w-64 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/5 blur-3xl" />
+          </div>
+
+          {/* Content */}
+          <div className="relative z-10 flex flex-col items-center py-20 text-center">
+            <div
+              className={cn(
+                'mb-6 flex size-20 items-center justify-center rounded-3xl',
+                'bg-gradient-to-br from-muted/80 via-muted/60 to-muted/40',
+                'shadow-[0_4px_24px_rgba(0,0,0,0.04)]',
+                'backdrop-blur-sm border border-border/30'
+              )}
+            >
+              <Bot className="size-9 text-muted-foreground/60" strokeWidth={1.5} />
             </div>
-            <h3 className="mb-2 text-lg font-semibold text-foreground">
+            <h3 className="mb-3 text-xl font-semibold text-foreground">
               还没有 AI 配置
             </h3>
-            <p className="mx-auto mb-6 max-w-md text-sm text-muted-foreground">
-              添加您的第一个 AI 配置来开始使用 AI 功能
+            <p className="mx-auto mb-8 max-w-xs text-sm leading-relaxed text-muted-foreground">
+              添加您的第一个 AI 配置，解锁智能摘要、翻译等功能
             </p>
-            <Button onClick={openNewConfigModal}>添加配置</Button>
+            <Button size="lg" onClick={openNewConfigModal} className="gap-2">
+              <Plus className="size-5" strokeWidth={1.75} />
+              添加配置
+            </Button>
           </div>
-        </Card>
+        </div>
 
-        {/* Modal */}
         <AIConfigModal
           isOpen={showModal}
           config={editingConfig}
@@ -184,35 +218,48 @@ export function AIConfigList({
     <div>
       {/* Header */}
       <div className="mb-6 flex items-center justify-between">
-        <Button onClick={openNewConfigModal}>添加配置</Button>
+        <Button onClick={openNewConfigModal} className="gap-2">
+          <Plus className="size-4" strokeWidth={1.75} />
+          添加配置
+        </Button>
       </div>
 
       {/* Error message */}
       {error && (
-        <div className="mb-4 rounded-lg border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+        <div
+          className={cn(
+            'mb-4 rounded-xl border border-destructive/20',
+            'bg-destructive/8 px-4 py-3 text-sm text-destructive',
+            'backdrop-blur-sm'
+          )}
+        >
           {error}
         </div>
       )}
 
-      {/* Config list */}
+      {/* Config grid with staggered animation */}
       <div className="grid gap-4 md:grid-cols-2">
-        {configs.map((config) => (
-          <AIConfigCard
+        {configs.map((config, index) => (
+          <div
             key={config.id}
-            config={config}
-            presets={presets}
-            onEdit={openEditModal}
-            onDelete={handleDelete}
-            onSetDefault={handleSetDefault}
-            onToggle={handleToggle}
-            onTest={handleTest}
-            isTesting={testingConfigId === config.id}
-            testResult={testResults[config.id]}
-          />
+            className="animate-[configCardFadeIn_0.4s_ease-out_forwards] opacity-0"
+            style={{ animationDelay: `${index * 60}ms` }}
+          >
+            <AIConfigCard
+              config={config}
+              presets={presets}
+              onEdit={openEditModal}
+              onDelete={handleDelete}
+              onSetDefault={handleSetDefault}
+              onToggle={handleToggle}
+              onTest={handleTest}
+              isTesting={testingConfigId === config.id}
+              testResult={testResults[config.id]}
+            />
+          </div>
         ))}
       </div>
 
-      {/* Modal */}
       <AIConfigModal
         isOpen={showModal}
         config={editingConfig}
@@ -225,6 +272,19 @@ export function AIConfigList({
         onTest={editingConfig ? () => handleTest(editingConfig) : undefined}
         isTesting={testingConfigId === editingConfig?.id}
       />
+
+      <style jsx>{`
+        @keyframes configCardFadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(16px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+      `}</style>
     </div>
   );
 }

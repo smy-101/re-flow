@@ -2,15 +2,15 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { FileText, TriangleAlert } from 'lucide-react';
+import { FileText, TriangleAlert, RefreshCw } from 'lucide-react';
 import ItemCard from './ItemCard';
 import MarkAllReadConfirm from './MarkAllReadConfirm';
 import { fetchItems, markAllAsRead, FeedItem } from '@/lib/api/items';
 import { fetchFeeds, Feed } from '@/lib/api/feeds';
 import Button from '@/components/ui/Button';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
-import Card from '@/components/ui/Card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/Select';
+import { cn } from '@/lib/utils';
 
 type FilterStatus = 'all' | 'unread' | 'read';
 
@@ -35,7 +35,6 @@ export default function ItemList({
   const [sortBy, setSortBy] = useState<'newest' | 'oldest'>('newest');
   const [selectedFeed, setSelectedFeed] = useState<string | null>(feedId || null);
 
-  // Mark all as read state
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [isMarking, setIsMarking] = useState(false);
 
@@ -44,7 +43,6 @@ export default function ItemList({
       try {
         setLoading(true);
 
-        // Convert filterStatus to isRead parameter
         let isRead: boolean | undefined;
         if (filterStatus === 'unread') {
           isRead = false;
@@ -79,7 +77,6 @@ export default function ItemList({
       const feedIdNum = feedId ? parseInt(feedId, 10) : undefined;
       await markAllAsRead(feedIdNum);
 
-      // Reload data to refresh the list
       let isRead: boolean | undefined;
       if (filterStatus === 'unread') {
         isRead = false;
@@ -102,7 +99,6 @@ export default function ItemList({
     }
   };
 
-  // Sort items with memoization to avoid re-sorting on every render
   const sortedItems = useMemo(() => {
     return [...items].sort((a, b) => {
       if (sortBy === 'newest') {
@@ -113,7 +109,6 @@ export default function ItemList({
     });
   }, [items, sortBy]);
 
-  // Memoize feed lookup map for O(1) access
   const feedMap = useMemo(() => {
     return new Map(feeds.map((f) => [f.id, f.title]));
   }, [feeds]);
@@ -122,112 +117,216 @@ export default function ItemList({
     return feedMap.get(feedId);
   };
 
+  // Loading state
   if (loading) {
     return (
-      <div className="flex justify-center py-16">
-        <LoadingSpinner size="lg" />
+      <div className="flex items-center justify-center py-20">
+        <div className="relative">
+          <div className="absolute inset-0 animate-ping rounded-full bg-primary/10 blur-xl" />
+          <LoadingSpinner size="lg" />
+        </div>
       </div>
     );
   }
 
+  // Error state
   if (error) {
     return (
-      <Card className="border-destructive/20 bg-destructive/10">
-        <div className="flex flex-col items-center py-10 text-center">
-          <TriangleAlert className="mb-4 size-10 text-destructive" />
-          <p className="mb-4 text-sm text-destructive">{error}</p>
-          <button onClick={() => window.location.reload()} className="text-sm font-medium text-primary hover:underline">
+      <div
+        className={cn(
+          'relative overflow-hidden rounded-2xl',
+          'border border-destructive/20 bg-destructive/5 backdrop-blur-xl'
+        )}
+      >
+        {/* Decorative glow */}
+        <div className="pointer-events-none absolute inset-0">
+          <div className="absolute -left-8 -top-8 h-32 w-32 rounded-full bg-destructive/10 blur-2xl" />
+        </div>
+
+        <div className="relative z-10 flex flex-col items-center py-14 text-center">
+          <div
+            className={cn(
+              'mb-4 flex size-14 items-center justify-center rounded-2xl',
+              'bg-destructive/10 text-destructive'
+            )}
+          >
+            <TriangleAlert className="size-7" strokeWidth={1.5} />
+          </div>
+          <p className="mb-4 text-sm font-medium text-destructive">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className={cn(
+              'inline-flex items-center gap-2 rounded-xl px-4 py-2',
+              'text-sm font-medium text-foreground/70',
+              'transition-colors hover:text-foreground'
+            )}
+          >
+            <RefreshCw className="size-4" />
             重新加载
           </button>
         </div>
-      </Card>
+      </div>
     );
   }
 
+  // Empty state
   if (items.length === 0) {
-    return (
-      <Card className="border-border/70 bg-card/95">
-        <div className="py-14 text-center">
-          <FileText className="mx-auto mb-4 size-14 text-muted-foreground" />
-          <h3 className="mb-2 text-lg font-semibold text-foreground">
-            {filterStatus === 'unread' ? '暂无未读文章' :
-             filterStatus === 'read' ? '暂无已读文章' :
-             filterFavorite ? '暂无收藏文章' :
-             '暂无文章'}
-          </h3>
-          <p className="mx-auto max-w-md text-sm leading-6 text-muted-foreground">
-            {filterStatus === 'unread' ? '太棒了！你已经读完所有文章' :
-             filterStatus === 'read' ? '还没有阅读过任何文章，去探索吧！' :
-             filterFavorite ? '还没有收藏任何文章' :
-             '还没有添加任何订阅'}
-          </p>
+    const getEmptyContent = () => {
+      if (filterStatus === 'unread') {
+        return {
+      title: '暂无未读文章',
+      description: '太棒了！你已经读完所有文章了',
+      icon: FileText,
+    };
+  }
+  if (filterStatus === 'read') {
+    return {
+      title: '暂无已读文章',
+      description: '还没有阅读过任何文章，去探索吧！',
+      icon: FileText,
+    };
+  }
+  if (filterFavorite) {
+    return {
+      title: '暂无收藏文章',
+      description: '收藏你喜欢的文章，方便以后阅读',
+      icon: FileText,
+    };
+  }
+  return {
+    title: '暂无文章',
+    description: '还没有添加任何订阅',
+    icon: FileText,
+  };
+  };
+
+  const emptyContent = getEmptyContent();
+
+  return (
+    <div
+      className={cn(
+        'relative overflow-hidden rounded-2xl',
+        'border border-border/40 bg-card/70 backdrop-blur-xl',
+        'shadow-[0_2px_12px_rgba(0,0,0,0.04),0_1px_2px_rgba(0,0,0,0.02)]'
+      )}
+    >
+      {/* Decorative background */}
+      <div className="pointer-events-none absolute inset-0 z-0">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/3" />
+        <div
+          className="absolute inset-0 opacity-[0.02]"
+          style={{
+            backgroundImage: `
+              linear-gradient(hsl(var(--foreground)) 1px, transparent 1px),
+              linear-gradient(90deg, hsl(var(--foreground)) 1px, transparent 1px)
+            `,
+            backgroundSize: '24px 24px',
+          }}
+        />
+        <div className="absolute left-1/2 top-1/2 h-48 w-48 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/5 blur-3xl" />
+      </div>
+
+      <div className="relative z-10 flex flex-col items-center py-16 text-center">
+        <div
+          className={cn(
+            'mb-5 flex size-16 items-center justify-center rounded-2xl',
+            'bg-gradient-to-br from-muted/80 via-muted/60 to-muted/40',
+            'shadow-[0_4px_24px_rgba(0,0,0,0.04)]',
+            'backdrop-blur-sm border border-border/30'
+          )}
+        >
+          <emptyContent.icon className="size-8 text-muted-foreground/60" strokeWidth={1.5} />
         </div>
-      </Card>
-    );
+        <h3 className="mb-2 text-lg font-semibold text-foreground">
+          {emptyContent.title}
+        </h3>
+        <p className="mx-auto max-w-xs text-sm leading-relaxed text-muted-foreground">
+          {emptyContent.description}
+        </p>
+      </div>
+    </div>
+  );
   }
 
   return (
     <div>
-      <div className="mb-6 flex flex-col gap-4 rounded-2xl border border-border/70 bg-card/95 p-4 shadow-sm lg:flex-row lg:items-center">
-        <div className="grid flex-1 gap-4 sm:grid-cols-2">
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">排序</label>
-            <Select value={sortBy} onValueChange={(value) => setSortBy(value as 'newest' | 'oldest')}>
-              <SelectTrigger>
-                <SelectValue placeholder="选择排序" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="newest">最新优先</SelectItem>
-                <SelectItem value="oldest">最早优先</SelectItem>
-              </SelectContent>
-            </Select>
+      {/* Filter bar */}
+      <div
+        className={cn(
+          'mb-6 rounded-2xl border border-border/40',
+          'bg-card/70 backdrop-blur-xl',
+          'shadow-[0_2px_12px_rgba(0,0,0,0.04),0_1px_2px_rgba(0,0,0,0.02)]',
+          'transition-all duration-300',
+          'hover:border-border/50 hover:shadow-[0_4px_16px_rgba(0,0,0,0.06)]'
+        )}
+      >
+        <div className="flex flex-col gap-4 p-4 lg:flex-row lg:items-center lg:p-5">
+          <div className="grid flex-1 gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                排序
+              </label>
+              <Select value={sortBy} onValueChange={(value) => setSortBy(value as 'newest' | 'oldest')}>
+                <SelectTrigger className="h-10">
+                  <SelectValue placeholder="选择排序" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="newest">最新优先</SelectItem>
+                  <SelectItem value="oldest">最早优先</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                订阅
+              </label>
+              <Select value={selectedFeed || '__all__'} onValueChange={(value) => setSelectedFeed(value === '__all__' ? null : value)}>
+                <SelectTrigger className="h-10">
+                  <SelectValue placeholder="全部订阅" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__all__">全部</SelectItem>
+                  {feeds.map((feed) => (
+                    <SelectItem key={feed.id} value={String(feed.id)}>
+                      {feed.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">订阅</label>
-            <Select value={selectedFeed || '__all__'} onValueChange={(value) => setSelectedFeed(value === '__all__' ? null : value)}>
-              <SelectTrigger>
-                <SelectValue placeholder="全部订阅" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="__all__">全部</SelectItem>
-                {feeds.map((feed) => (
-                  <SelectItem key={feed.id} value={String(feed.id)}>
-                    {feed.title}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="flex items-center gap-2 lg:ml-auto">
+            {(filterFavorite || filterStatus === 'unread') && (
+              <Button variant="secondary" size="sm" onClick={() => router.push('/items')}>
+                显示全部
+              </Button>
+            )}
+
+            {showMarkAllRead && filterStatus === 'unread' && items.length > 0 && (
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => setIsConfirmOpen(true)}
+              >
+                全部标记为已读
+              </Button>
+            )}
           </div>
         </div>
-
-        {filterFavorite && (
-          <Button variant="secondary" size="sm" onClick={() => router.push('/items')}>
-            显示全部
-          </Button>
-        )}
-
-        {filterStatus === 'unread' && (
-          <Button variant="secondary" size="sm" onClick={() => router.push('/items')}>
-            显示全部
-          </Button>
-        )}
-
-        {showMarkAllRead && filterStatus === 'unread' && items.length > 0 && (
-          <Button
-            variant="primary"
-            size="sm"
-            onClick={() => setIsConfirmOpen(true)}
-            className="lg:ml-auto"
-          >
-            全部标记为已读
-          </Button>
-        )}
       </div>
 
+      {/* Item list with staggered animation */}
       <div className="space-y-4">
-        {sortedItems.map((item) => (
-          <ItemCard key={item.id} item={item} feedTitle={getFeedTitle(item.feedId)} />
+        {sortedItems.map((item, index) => (
+          <div
+            key={item.id}
+            className="animate-[itemCardFadeIn_0.4s_ease-out_forwards] opacity-0"
+            style={{ animationDelay: `${index * 40}ms` }}
+          >
+            <ItemCard item={item} feedTitle={getFeedTitle(item.feedId)} />
+          </div>
         ))}
       </div>
 
@@ -240,6 +339,19 @@ export default function ItemList({
         feedTitle={feedId ? getFeedTitle(parseInt(feedId, 10)) : undefined}
         isLoading={isMarking}
       />
+
+      <style jsx>{`
+        @keyframes itemCardFadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(12px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+      `}</style>
     </div>
   );
 }

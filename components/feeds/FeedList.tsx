@@ -1,10 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { Rss } from 'lucide-react';
+import { Plus, Rss } from 'lucide-react';
 import FeedCard from './FeedCard';
 import { Feed } from '@/lib/api/feeds';
-import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
@@ -23,59 +22,110 @@ export default function FeedList({ feeds, onOpenSettings, pageSize = 12 }: FeedL
   const endIndex = startIndex + pageSize;
   const currentFeeds = feeds.slice(startIndex, endIndex);
 
+  // Empty state
   if (feeds.length === 0) {
     return (
-      <Card className="border-border/70 bg-card/95">
-        <div className="py-14 text-center">
-          <div className="mx-auto mb-4 flex size-14 items-center justify-center rounded-2xl bg-muted">
-            <Rss className="size-7 text-muted-foreground" />
+      <div
+        className={cn(
+          'relative overflow-hidden rounded-2xl',
+          'border border-border/40 bg-card/70 backdrop-blur-xl',
+          'shadow-[0_2px_12px_rgba(0,0,0,0.04),0_1px_2px_rgba(0,0,0,0.02)]'
+        )}
+      >
+        {/* Decorative background */}
+        <div className="pointer-events-none absolute inset-0 z-0">
+          {/* Gradient mesh */}
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/3" />
+          {/* Subtle grid */}
+          <div
+            className="absolute inset-0 opacity-[0.02]"
+            style={{
+              backgroundImage: `
+                linear-gradient(hsl(var(--foreground)) 1px, transparent 1px),
+                linear-gradient(90deg, hsl(var(--foreground)) 1px, transparent 1px)
+              `,
+              backgroundSize: '24px 24px',
+            }}
+          />
+          {/* Ambient glow */}
+          <div className="absolute left-1/2 top-1/2 h-64 w-64 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/4 blur-3xl" />
+        </div>
+
+        {/* Content */}
+        <div className="relative z-10 flex flex-col items-center py-20 text-center">
+          <div
+            className={cn(
+              'mb-6 flex size-20 items-center justify-center rounded-3xl',
+              'bg-gradient-to-br from-muted/80 via-muted/60 to-muted/40',
+              'shadow-[0_4px_24px_rgba(0,0,0,0.04)]',
+              'backdrop-blur-sm border border-border/30'
+            )}
+          >
+            <Rss className="size-9 text-muted-foreground/60" strokeWidth={1.5} />
           </div>
-          <h3 className="mb-2 text-lg font-semibold text-foreground">暂无订阅</h3>
-          <p className="mx-auto mb-6 max-w-md text-sm text-muted-foreground">
-            开始添加你喜欢的 RSS 订阅吧
+          <h3 className="mb-3 text-xl font-semibold text-foreground">暂无订阅</h3>
+          <p className="mx-auto mb-8 max-w-xs text-sm leading-relaxed text-muted-foreground">
+            开始添加你喜欢的 RSS 订阅，打造专属的信息流
           </p>
           <Link href="/feeds/add">
-            <Button>
-              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>
+            <Button size="lg" className="gap-2">
+              <Plus className="size-5" strokeWidth={1.75} />
               添加订阅
             </Button>
           </Link>
         </div>
-      </Card>
+      </div>
     );
   }
 
   return (
     <div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-        {currentFeeds.map((feed) => (
-          <FeedCard key={feed.id} feed={feed} onOpenSettings={onOpenSettings} />
+      {/* Feed grid with staggered animation */}
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {currentFeeds.map((feed, index) => (
+          <div
+            key={feed.id}
+            className="animate-[feedCardFadeIn_0.5s_ease-out_forwards] opacity-0"
+            style={{ animationDelay: `${index * 60}ms` }}
+          >
+            <FeedCard feed={feed} onOpenSettings={onOpenSettings} />
+          </div>
         ))}
       </div>
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-2">
+        <div className="mt-8 flex items-center justify-center gap-2">
           <button
             onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
             disabled={currentPage === 1}
-            className="h-10 px-4 rounded-lg border border-border bg-card text-sm font-medium text-foreground transition-colors hover:bg-secondary disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-card"
+            className={cn(
+              'h-10 px-4 rounded-xl text-sm font-medium',
+              'border border-border/50 bg-card/70 backdrop-blur-sm text-foreground',
+              'transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]',
+              'hover:border-border/70 hover:bg-card/90 hover:shadow-sm',
+              'disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-card/70 disabled:hover:border-border/50',
+              'active:scale-[0.98]'
+            )}
           >
             上一页
           </button>
 
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1.5">
             {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
               <button
                 key={page}
                 onClick={() => setCurrentPage(page)}
                 className={cn(
-                  'size-10 rounded-lg text-sm font-medium transition-colors',
+                  'size-10 rounded-xl text-sm font-medium',
+                  'transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]',
+                  'active:scale-[0.95]',
                   currentPage === page
-                    ? 'bg-primary text-primary-foreground'
-                    : 'border border-border bg-card text-foreground hover:bg-secondary'
+                    ? 'bg-primary text-primary-foreground shadow-md shadow-primary/25'
+                    : [
+                        'border border-border/50 bg-card/70 backdrop-blur-sm text-foreground',
+                        'hover:border-border/70 hover:bg-card/90 hover:shadow-sm',
+                      ]
                 )}
               >
                 {page}
@@ -86,12 +136,33 @@ export default function FeedList({ feeds, onOpenSettings, pageSize = 12 }: FeedL
           <button
             onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
             disabled={currentPage === totalPages}
-            className="h-10 px-4 rounded-lg border border-border bg-card text-sm font-medium text-foreground transition-colors hover:bg-secondary disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-card"
+            className={cn(
+              'h-10 px-4 rounded-xl text-sm font-medium',
+              'border border-border/50 bg-card/70 backdrop-blur-sm text-foreground',
+              'transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]',
+              'hover:border-border/70 hover:bg-card/90 hover:shadow-sm',
+              'disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-card/70 disabled:hover:border-border/50',
+              'active:scale-[0.98]'
+            )}
           >
             下一页
           </button>
         </div>
       )}
+
+      {/* Animation keyframes */}
+      <style jsx>{`
+        @keyframes feedCardFadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(16px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+      `}</style>
     </div>
   );
 }
