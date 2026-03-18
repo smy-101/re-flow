@@ -206,32 +206,15 @@ export default function ItemList({
     <div
       className={cn(
         'relative overflow-hidden rounded-2xl',
-        'border border-border/40 bg-card/70 backdrop-blur-xl',
-        'shadow-[0_2px_12px_rgba(0,0,0,0.04),0_1px_2px_rgba(0,0,0,0.02)]'
+        'border border-border/50 bg-card/70 backdrop-blur-xl',
+        'shadow-md'
       )}
     >
-      {/* Decorative background */}
-      <div className="pointer-events-none absolute inset-0 z-0">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/3" />
-        <div
-          className="absolute inset-0 opacity-[0.02]"
-          style={{
-            backgroundImage: `
-              linear-gradient(hsl(var(--foreground)) 1px, transparent 1px),
-              linear-gradient(90deg, hsl(var(--foreground)) 1px, transparent 1px)
-            `,
-            backgroundSize: '24px 24px',
-          }}
-        />
-        <div className="absolute left-1/2 top-1/2 h-48 w-48 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/5 blur-3xl" />
-      </div>
-
       <div className="relative z-10 flex flex-col items-center py-16 text-center">
         <div
           className={cn(
             'mb-5 flex size-16 items-center justify-center rounded-2xl',
             'bg-gradient-to-br from-muted/80 via-muted/60 to-muted/40',
-            'shadow-[0_4px_24px_rgba(0,0,0,0.04)]',
             'backdrop-blur-sm border border-border/30'
           )}
         >
@@ -253,11 +236,11 @@ export default function ItemList({
       {/* Filter bar */}
       <div
         className={cn(
-          'mb-6 rounded-2xl border border-border/40',
+          'mb-6 rounded-2xl border border-border/50',
           'bg-card/70 backdrop-blur-xl',
-          'shadow-[0_2px_12px_rgba(0,0,0,0.04),0_1px_2px_rgba(0,0,0,0.02)]',
-          'transition-all duration-300',
-          'hover:border-border/50 hover:shadow-[0_4px_16px_rgba(0,0,0,0.06)]'
+          'shadow-md',
+          'transition-all duration-200',
+          'hover:border-border/70 hover:shadow-lg'
         )}
       >
         <div className="flex flex-col gap-4 p-4 lg:flex-row lg:items-center lg:p-5">

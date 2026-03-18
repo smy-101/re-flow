@@ -39,6 +39,17 @@
   --sidebar-card-hover: 210 20% 98%;
   --sidebar-border: 214 24% 88%;
   --sidebar-muted: 215 16% 55%;
+
+  /* Unified border opacity levels */
+  --border-weak: 0.3;
+  --border-default: 0.5;
+  --border-strong: 0.7;
+
+  /* Shadow depth system */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.02), 0 1px 3px rgba(0, 0, 0, 0.03);
+  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.06), 0 2px 8px rgba(0, 0, 0, 0.04);
+  --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.08), 0 4px 16px rgba(0, 0, 0, 0.04);
 }
 
 .dark {
@@ -54,8 +65,8 @@
   --secondary-foreground: 210 40% 96%;
   --muted: 217 24% 18%;
   --muted-foreground: 215 20% 72%;
-  --accent: 192 38% 19%;
-  --accent-foreground: 188 92% 72%;
+  --accent: 38 80% 55%;
+  --accent-foreground: 222 47% 11%;
   --destructive: 0 63% 52%;
   --destructive-foreground: 210 40% 98%;
   --success: 155 58% 46%;
@@ -77,6 +88,12 @@
   --sidebar-card-hover: 222 35% 18%;
   --sidebar-border: 217 19% 25%;
   --sidebar-muted: 215 20% 55%;
+
+  /* Dark mode shadow adjustments */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.15);
+  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.2), 0 1px 2px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2);
+  --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.4), 0 4px 16px rgba(0, 0, 0, 0.25);
 }
 
 @theme inline {
@@ -121,6 +138,10 @@
   --radius-md: calc(var(--radius) - 0.125rem);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 0.25rem);
+  --shadow-sm: var(--shadow-sm);
+  --shadow-md: var(--shadow-md);
+  --shadow-lg: var(--shadow-lg);
+  --shadow-xl: var(--shadow-xl);
 }
 
 @layer base {

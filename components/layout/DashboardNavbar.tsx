@@ -23,29 +23,10 @@ export default function DashboardNavbar() {
       <nav className="group sticky top-0 z-40 h-16">
         {/* Multi-layer background */}
         <div className="pointer-events-none absolute inset-0 z-0">
-          {/* Base gradient */}
           <div className="absolute inset-0 bg-gradient-to-b from-background via-background/98 to-background/95" />
-
-          {/* Glass overlay */}
           <div className="absolute inset-0 backdrop-blur-2xl" />
-
-          {/* Subtle grid pattern */}
-          <div
-            className="absolute inset-0 opacity-[0.02]"
-            style={{
-              backgroundImage: `
-                linear-gradient(hsl(var(--foreground)) 1px, transparent 1px),
-                linear-gradient(90deg, hsl(var(--foreground)) 1px, transparent 1px)
-              `,
-              backgroundSize: '32px 32px',
-            }}
-          />
-
-          {/* Top ambient glow */}
-          <div className="absolute -top-20 left-1/2 h-40 w-[600px] -translate-x-1/2 rounded-full bg-primary/5 blur-3xl" />
-
-          {/* Bottom border with gradient */}
-          <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-border/60 to-transparent" />
+          {/* Bottom border */}
+          <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-border/50 to-transparent" />
         </div>
 
         {/* Content */}

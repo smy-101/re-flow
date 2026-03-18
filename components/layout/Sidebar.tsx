@@ -18,39 +18,20 @@ export default function Sidebar() {
     <aside
       className={cn(
         'group relative hidden shrink-0 overflow-hidden md:flex md:h-full md:flex-col',
-        'transition-[width] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]',
+        'transition-[width] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]',
         collapsed ? 'w-[88px]' : 'w-72'
       )}
       aria-label="主导航"
     >
-      {/* Decorative background layers */}
+      {/* Background with subtle gradient */}
       <div className="pointer-events-none absolute inset-0 z-0">
-        {/* Base gradient */}
         <div className="absolute inset-0 bg-gradient-to-b from-sidebar via-sidebar to-sidebar/95" />
-
-        {/* Glass overlay with blur effect */}
         <div className="absolute inset-0 backdrop-blur-xl" />
-
-        {/* Subtle grid pattern */}
-        <div
-          className="absolute inset-0 opacity-[0.03]"
-          style={{
-            backgroundImage: `
-              linear-gradient(hsl(var(--sidebar-foreground)) 1px, transparent 1px),
-              linear-gradient(90deg, hsl(var(--sidebar-foreground)) 1px, transparent 1px)
-            `,
-            backgroundSize: '24px 24px',
-          }}
-        />
-
-        {/* Ambient glow at top */}
-        <div className="absolute -left-20 -top-20 h-48 w-48 rounded-full bg-sidebar-glow/8 blur-3xl" />
-
-        {/* Side accent line */}
-        <div className="absolute bottom-0 left-0 top-0 w-px bg-gradient-to-b from-transparent via-sidebar-border/50 to-transparent" />
-
-        {/* Right border */}
-        <div className="absolute bottom-0 right-0 top-0 w-px bg-gradient-to-b from-sidebar-border/30 via-sidebar-border/50 to-sidebar-border/30" />
+        {/* Ambient glow */}
+        <div className="absolute -left-12 -top-12 h-40 w-40 rounded-full bg-sidebar-accent/6 blur-3xl" />
+        {/* Borders */}
+        <div className="absolute bottom-0 left-0 top-0 w-px bg-gradient-to-b from-transparent via-sidebar-border/40 to-transparent" />
+        <div className="absolute bottom-0 right-0 top-0 w-px bg-gradient-to-b from-transparent via-sidebar-border/40 to-transparent" />
       </div>
 
       {/* Toggle button header */}

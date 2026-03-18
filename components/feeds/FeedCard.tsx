@@ -56,31 +56,17 @@ export default function FeedCard({ feed, onRefresh, onOpenSettings }: FeedCardPr
     <div
       className={cn(
         'group relative overflow-hidden rounded-2xl',
-        'border border-border/40 bg-card/70 backdrop-blur-xl',
-        'shadow-[0_2px_12px_rgba(0,0,0,0.04),0_1px_2px_rgba(0,0,0,0.02)]',
-        'transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]',
-        'hover:border-border/60 hover:bg-card/90',
-        'hover:shadow-[0_8px_32px_rgba(0,0,0,0.08),0_2px_8px_rgba(0,0,0,0.04)]',
+        'border border-border/50 bg-card/70 backdrop-blur-xl',
+        'shadow-md',
+        'transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]',
+        'hover:border-border/70 hover:bg-card/90',
+        'hover:shadow-lg',
         'active:scale-[0.995]'
       )}
     >
-      {/* Decorative background layers */}
+      {/* Subtle hover gradient */}
       <div className="pointer-events-none absolute inset-0 z-0">
-        {/* Gradient mesh overlay */}
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/3 via-transparent to-primary/2 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
-        {/* Subtle grid pattern */}
-        <div
-          className="absolute inset-0 opacity-[0.015]"
-          style={{
-            backgroundImage: `
-              linear-gradient(hsl(var(--foreground)) 1px, transparent 1px),
-              linear-gradient(90deg, hsl(var(--foreground)) 1px, transparent 1px)
-            `,
-            backgroundSize: '20px 20px',
-          }}
-        />
-        {/* Corner glow */}
-        <div className="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-primary/5 blur-2xl opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/3 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
       </div>
 
       {/* Content */}
