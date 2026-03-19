@@ -25,17 +25,16 @@ export default function Sidebar() {
     >
       {/* Background with subtle gradient */}
       <div className="pointer-events-none absolute inset-0 z-0">
-        <div className="absolute inset-0 bg-gradient-to-b from-sidebar via-sidebar to-sidebar/95" />
+        <div className="absolute inset-0 bg-background" />
         <div className="absolute inset-0 backdrop-blur-xl" />
         {/* Ambient glow */}
-        <div className="absolute -left-12 -top-12 h-40 w-40 rounded-full bg-sidebar-accent/6 blur-3xl" />
-        {/* Borders */}
-        <div className="absolute bottom-0 left-0 top-0 w-px bg-gradient-to-b from-transparent via-sidebar-border/40 to-transparent" />
-        <div className="absolute bottom-0 right-0 top-0 w-px bg-gradient-to-b from-transparent via-sidebar-border/40 to-transparent" />
+        <div className="absolute -left-12 -top-12 h-40 w-40 rounded-full bg-primary/5 blur-3xl" />
+        {/* Right border for visual separation */}
+        <div className="absolute bottom-0 right-0 top-0 w-px bg-gradient-to-b from-transparent via-border/60 to-transparent" />
       </div>
 
       {/* Toggle button header */}
-      <div className="relative z-10 flex items-center border-b border-sidebar-border/40 px-4 py-5">
+      <div className="relative z-10 flex items-center border-b border-border/40 px-4 py-5">
         <div
           className={cn(
             'flex w-full items-center transition-all duration-500',
@@ -46,17 +45,17 @@ export default function Sidebar() {
             onClick={toggle}
             className={cn(
               'group/toggle relative flex h-10 w-10 items-center justify-center rounded-xl',
-              'bg-sidebar-card/60 backdrop-blur-sm',
-              'border border-sidebar-border/50',
-              'text-sidebar-muted transition-all duration-300',
-              'hover:border-sidebar-accent/30 hover:bg-sidebar-card-hover hover:text-sidebar-accent',
-              'hover:shadow-[0_0_20px_hsl(var(--sidebar-glow)/0.15)]',
+              'bg-card/60 backdrop-blur-sm',
+              'border border-border/50',
+              'text-muted-foreground transition-all duration-300',
+              'hover:border-primary/30 hover:bg-card hover:text-primary',
+              'hover:shadow-[0_0_20px_hsl(var(--primary)/0.15)]',
               'active:scale-95'
             )}
             aria-label={collapsed ? '展开边栏' : '折叠边栏'}
             title={collapsed ? '展开' : '折叠'}
           >
-            <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-sidebar-glow/10 to-transparent opacity-0 transition-opacity duration-300 group-hover/toggle:opacity-100" />
+            <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-primary/10 to-transparent opacity-0 transition-opacity duration-300 group-hover/toggle:opacity-100" />
             {collapsed ? (
               <ChevronsRight size={18} strokeWidth={1.75} className="relative z-10" />
             ) : (
@@ -93,12 +92,12 @@ export default function Sidebar() {
       </nav>
 
       {/* Bottom decorative element */}
-      <div className="relative z-10 border-t border-sidebar-border/30 px-4 py-4">
+      <div className="relative z-10 border-t border-border/30 px-4 py-4">
         <div
           className={cn(
             'mx-auto h-1 rounded-full transition-all duration-500',
             collapsed ? 'w-8' : 'w-24',
-            'bg-gradient-to-r from-transparent via-sidebar-accent/20 to-transparent'
+            'bg-gradient-to-r from-transparent via-primary/20 to-transparent'
           )}
         />
       </div>

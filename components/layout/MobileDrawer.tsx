@@ -19,7 +19,7 @@ export default function MobileDrawer() {
 
   return (
     <Sheet open={isOpen} onOpenChange={(open) => !open && close()}>
-      <SheetContent side="left" className="w-[22rem] bg-sidebar text-sidebar-foreground md:hidden">
+      <SheetContent side="left" className="w-[22rem] bg-background text-foreground md:hidden">
         <SheetHeader className="border-b border-border/60 pb-4 pr-10">
           <SheetTitle>导航</SheetTitle>
         </SheetHeader>
