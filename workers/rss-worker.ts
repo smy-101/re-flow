@@ -1,4 +1,10 @@
 import cron from 'node-cron';
+import { config } from 'dotenv';
+config({ path: '.env', override: true });
+config({ path: '.env.local', override: true });
+config({ path: '.env.development', override: true });
+config({ path: '.env.development.local', override: true });
+
 import { db } from '@/lib/db';
 import { fetchAndStoreItems } from '@/lib/rss/fetcher';
 
