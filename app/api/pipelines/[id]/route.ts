@@ -11,11 +11,13 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    // Get authenticated user
-    const userId = await getAuthenticatedUser();
-    if (userId instanceof NextResponse) return userId;
-
-    const { id } = await params;
+    // Parallel: auth + params
+    const [userIdResult, { id }] = await Promise.all([
+      getAuthenticatedUser(),
+      params,
+    ]);
+    if (userIdResult instanceof NextResponse) return userIdResult;
+    const userId = userIdResult;
     const pipelineId = Number.parseInt(id, 10);
     if (Number.isNaN(pipelineId)) {
       return NextResponse.json({ error: '无效的管道 ID' }, { status: 400 });
@@ -50,11 +52,14 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    // Get authenticated user
-    const userId = await getAuthenticatedUser();
-    if (userId instanceof NextResponse) return userId;
-
-    const { id } = await params;
+    // Parallel: auth + params + body
+    const [userIdResult, { id }, body] = await Promise.all([
+      getAuthenticatedUser(),
+      params,
+      request.json(),
+    ]);
+    if (userIdResult instanceof NextResponse) return userIdResult;
+    const userId = userIdResult;
     const pipelineId = Number.parseInt(id, 10);
     if (Number.isNaN(pipelineId)) {
       return NextResponse.json({ error: '无效的管道 ID' }, { status: 400 });
@@ -69,7 +74,6 @@ export async function PUT(
       return NextResponse.json({ error: '管道不存在' }, { status: 404 });
     }
 
-    const body = await request.json();
     const { name, description, steps } = body;
 
     // Validate name if provided
@@ -150,11 +154,13 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    // Get authenticated user
-    const userId = await getAuthenticatedUser();
-    if (userId instanceof NextResponse) return userId;
-
-    const { id } = await params;
+    // Parallel: auth + params
+    const [userIdResult, { id }] = await Promise.all([
+      getAuthenticatedUser(),
+      params,
+    ]);
+    if (userIdResult instanceof NextResponse) return userIdResult;
+    const userId = userIdResult;
     const pipelineId = Number.parseInt(id, 10);
     if (Number.isNaN(pipelineId)) {
       return NextResponse.json({ error: '无效的管道 ID' }, { status: 400 });

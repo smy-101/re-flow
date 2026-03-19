@@ -4,9 +4,7 @@ import { useState } from 'react';
 import { Plus, Rss } from 'lucide-react';
 import FeedCard from './FeedCard';
 import { Feed } from '@/lib/api/feeds';
-import Button from '@/components/ui/Button';
 import EmptyState from '@/components/ui/EmptyState';
-import Link from 'next/link';
 import { cn } from '@/lib/utils';
 
 interface FeedListProps {

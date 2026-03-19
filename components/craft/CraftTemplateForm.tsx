@@ -31,13 +31,13 @@ function CraftTemplateFormInner({
   const [aiConfigs, setAiConfigs] = useState<AIConfig[]>([]);
   const [loadingAiConfigs, setLoadingAiConfigs] = useState(true);
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState(() => ({
     name: template?.name || '',
     description: template?.description || '',
     aiConfigId: template?.aiConfigId || 0,
     promptTemplate: template?.promptTemplate || '',
     category: template?.category || ('custom' as CraftTemplate['category']),
-  });
+  }));
 
   useEffect(() => {
     loadAiConfigs();

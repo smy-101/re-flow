@@ -17,11 +17,13 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // Get authenticated user
-    const userId = await getAuthenticatedUser();
-    if (userId instanceof NextResponse) return userId;
-
-    const { id } = await params;
+    // Parallel: auth + params
+    const [userIdResult, { id }] = await Promise.all([
+      getAuthenticatedUser(),
+      params,
+    ]);
+    if (userIdResult instanceof NextResponse) return userIdResult;
+    const userId = userIdResult;
     const feedId = parseInt(id, 10);
 
     if (isNaN(feedId)) {

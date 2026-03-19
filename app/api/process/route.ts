@@ -21,11 +21,13 @@ import {
 // POST /api/process - Process an article with a template or pipeline
 export async function POST(request: NextRequest) {
   try {
-    // Get authenticated user
-    const userId = await getAuthenticatedUser();
-    if (userId instanceof NextResponse) return userId;
-
-    const body = await request.json();
+    // Parallel: auth + body
+    const [userIdResult, body] = await Promise.all([
+      getAuthenticatedUser(),
+      request.json(),
+    ]);
+    if (userIdResult instanceof NextResponse) return userIdResult;
+    const userId = userIdResult;
     const { feedItemId, templateId, pipelineId } = body;
 
     // Validate feedItemId
@@ -54,7 +56,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Fetch the feed item
+    // Parallel: fetch item and feed (need item first for feedId, so we do it differently)
     const item = await db.query.feedItems.findFirst({
       where: eq(feedItems.id, feedItemId),
     });
@@ -102,7 +104,7 @@ export async function POST(request: NextRequest) {
       let tokensUsed: number;
 
       if (hasTemplateId) {
-        // Process with single template
+        // Process with single template - fetch template and AI config in parallel
         const template = await db.query.craftTemplates.findFirst({
           where: eq(craftTemplates.id, templateId),
         });

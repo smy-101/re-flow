@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { FileText, TriangleAlert, RefreshCw } from 'lucide-react';
 import ItemCard from './ItemCard';
 import MarkAllReadConfirm from './MarkAllReadConfirm';
-import { fetchItems, markAllAsRead, FeedItem } from '@/lib/api/items';
-import { fetchFeeds, Feed } from '@/lib/api/feeds';
+import { useItems, useFeeds, useMarkAllAsRead } from '@/lib/hooks/swr';
+import { FeedItem } from '@/lib/api/items';
 import Button from '@/components/ui/Button';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/Select';
@@ -28,72 +28,41 @@ export default function ItemList({
   showMarkAllRead = false,
 }: ItemListProps) {
   const router = useRouter();
-  const [items, setItems] = useState<FeedItem[]>([]);
-  const [feeds, setFeeds] = useState<Feed[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<'newest' | 'oldest'>('newest');
   const [selectedFeed, setSelectedFeed] = useState<string | null>(feedId || null);
 
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [isMarking, setIsMarking] = useState(false);
 
-  useEffect(() => {
-    async function loadData() {
-      try {
-        setLoading(true);
-
-        let isRead: boolean | undefined;
-        if (filterStatus === 'unread') {
-          isRead = false;
-        } else if (filterStatus === 'read') {
-          isRead = true;
-        }
-
-        const [itemsData, feedsData] = await Promise.all([
-          fetchItems({
-            feedId: selectedFeed || undefined,
-            isRead,
-            isFavorite: filterFavorite ? true : undefined,
-          }),
-          fetchFeeds(),
-        ]);
-
-        setItems(itemsData);
-        setFeeds(feedsData);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : '加载文章失败');
-      } finally {
-        setLoading(false);
-      }
+  // Build query options based on filters
+  const queryOptions = useMemo(() => {
+    let isRead: boolean | undefined;
+    if (filterStatus === 'unread') {
+      isRead = false;
+    } else if (filterStatus === 'read') {
+      isRead = true;
     }
-
-    loadData();
+    return {
+      feedId: selectedFeed || undefined,
+      isRead,
+      isFavorite: filterFavorite ? true : undefined,
+    };
   }, [filterStatus, filterFavorite, selectedFeed]);
+
+  // Use SWR hooks for data fetching
+  const { items, isLoading, isError, error, mutate: mutateItems } = useItems(queryOptions);
+  const { feeds } = useFeeds();
+  const { trigger: markAllReadTrigger } = useMarkAllAsRead();
 
   const handleMarkAllRead = async () => {
     try {
       setIsMarking(true);
       const feedIdNum = feedId ? parseInt(feedId, 10) : undefined;
-      await markAllAsRead(feedIdNum);
-
-      let isRead: boolean | undefined;
-      if (filterStatus === 'unread') {
-        isRead = false;
-      } else if (filterStatus === 'read') {
-        isRead = true;
-      }
-
-      const itemsData = await fetchItems({
-        feedId: selectedFeed || undefined,
-        isRead,
-        isFavorite: filterFavorite ? true : undefined,
-      });
-
-      setItems(itemsData);
+      await markAllReadTrigger(feedIdNum);
+      mutateItems(); // Revalidate items list
       setIsConfirmOpen(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : '标记失败');
+      console.error('Failed to mark all as read:', err);
     } finally {
       setIsMarking(false);
     }
@@ -113,12 +82,12 @@ export default function ItemList({
     return new Map(feeds.map((f) => [f.id, f.title]));
   }, [feeds]);
 
-  const getFeedTitle = (feedId: number) => {
+  const getFeedTitle = useCallback((feedId: number) => {
     return feedMap.get(feedId);
-  };
+  }, [feedMap]);
 
   // Loading state
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center py-20">
         <div className="relative">
@@ -130,7 +99,8 @@ export default function ItemList({
   }
 
   // Error state
-  if (error) {
+  if (isError) {
+    const errorMessage = error instanceof Error ? error.message : '加载文章失败';
     return (
       <div
         className={cn(
@@ -152,9 +122,9 @@ export default function ItemList({
           >
             <TriangleAlert className="size-7" strokeWidth={1.5} />
           </div>
-          <p className="mb-4 text-sm font-medium text-destructive">{error}</p>
+          <p className="mb-4 text-sm font-medium text-destructive">{errorMessage}</p>
           <button
-            onClick={() => window.location.reload()}
+            onClick={() => mutateItems()}
             className={cn(
               'inline-flex items-center gap-2 rounded-xl px-4 py-2',
               'text-sm font-medium text-foreground/70',

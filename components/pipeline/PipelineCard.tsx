@@ -1,5 +1,6 @@
 'use client';
 
+import { memo, useCallback } from 'react';
 import { Pipeline } from '@/lib/api/pipelines';
 import Button from '@/components/ui/Button';
 import Link from 'next/link';
@@ -11,15 +12,15 @@ interface PipelineCardProps {
   onDelete?: (id: number) => void;
 }
 
-export default function PipelineCard({
+const PipelineCard = memo(function PipelineCard({
   pipeline,
   onDelete,
 }: PipelineCardProps) {
-  const handleDelete = () => {
+  const handleDelete = useCallback(() => {
     if (window.confirm(`确定要删除管道 "${pipeline.name}" 吗？`)) {
       onDelete?.(pipeline.id);
     }
-  };
+  }, [pipeline.name, pipeline.id, onDelete]);
 
   const stepCount = pipeline.steps.length;
 
@@ -73,4 +74,6 @@ export default function PipelineCard({
       </div>
     </div>
   );
-}
+});
+
+export default PipelineCard;

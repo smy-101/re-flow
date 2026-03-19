@@ -11,35 +11,37 @@ interface RouteContext {
 // GET /api/feeds/[id] - Get a single feed by ID
 export async function GET(request: NextRequest, context: RouteContext) {
   try {
-    // Get authenticated user
-    const userId = await getAuthenticatedUser();
-    if (userId instanceof NextResponse) return userId;
+    // Parallel: auth + params
+    const [userIdResult, { id }] = await Promise.all([
+      getAuthenticatedUser(),
+      context.params,
+    ]);
+    if (userIdResult instanceof NextResponse) return userIdResult;
+    const userId = userIdResult;
 
-    const { id } = await context.params;
     const feedId = parseInt(id, 10);
 
     if (isNaN(feedId)) {
       return NextResponse.json({ error: 'Invalid feed ID' }, { status: 400 });
     }
 
-    // Fetch feed
-    const feed = await db.query.feeds.findFirst({
-      where: and(eq(feeds.id, feedId), eq(feeds.userId, userId)),
-    });
+    // Parallel: feed + unread count
+    const [feed, unreadItems] = await Promise.all([
+      db.query.feeds.findFirst({
+        where: and(eq(feeds.id, feedId), eq(feeds.userId, userId)),
+      }),
+      db.select({ count: feedItems.id })
+        .from(feedItems)
+        .where(and(eq(feedItems.feedId, feedId), eq(feedItems.isRead, false))),
+    ]);
 
     if (!feed) {
       return NextResponse.json({ error: 'Feed not found' }, { status: 404 });
     }
 
-    // Calculate unread count
-    const unreadCount = await db
-      .select({ count: feedItems.id })
-      .from(feedItems)
-      .where(and(eq(feedItems.feedId, feedId), eq(feedItems.isRead, false)));
-
     const feedWithUnread = {
       ...feed,
-      unreadCount: unreadCount.length,
+      unreadCount: unreadItems.length,
     };
 
     return NextResponse.json(feedWithUnread);
@@ -52,11 +54,15 @@ export async function GET(request: NextRequest, context: RouteContext) {
 // PUT /api/feeds/[id] - Update a feed
 export async function PUT(request: NextRequest, context: RouteContext) {
   try {
-    // Get authenticated user
-    const userId = await getAuthenticatedUser();
-    if (userId instanceof NextResponse) return userId;
+    // Parallel: auth + params + body
+    const [userIdResult, { id }, body] = await Promise.all([
+      getAuthenticatedUser(),
+      context.params,
+      request.json(),
+    ]);
+    if (userIdResult instanceof NextResponse) return userIdResult;
+    const userId = userIdResult;
 
-    const { id } = await context.params;
     const feedId = parseInt(id, 10);
 
     if (isNaN(feedId)) {
@@ -72,7 +78,6 @@ export async function PUT(request: NextRequest, context: RouteContext) {
       return NextResponse.json({ error: 'Feed not found' }, { status: 404 });
     }
 
-    const body = await request.json();
     const { title, category, pipelineId, templateId, autoProcess } = body;
 
     // Validate auto-process configuration
@@ -95,21 +100,25 @@ export async function PUT(request: NextRequest, context: RouteContext) {
       }
     }
 
-    // Validate pipeline/template ownership if provided
-    if (pipelineId !== undefined && pipelineId !== null) {
-      const pipeline = await db.query.pipelines.findFirst({
-        where: eq(pipelines.id, pipelineId),
-      });
-      if (!pipeline || pipeline.userId !== userId) {
-        return NextResponse.json({ error: '管道不存在或无权访问' }, { status: 400 });
-      }
+    // Validate pipeline/template ownership if provided (parallel)
+    if (pipelineId !== undefined && pipelineId !== null && templateId !== undefined && templateId !== null) {
+      return NextResponse.json({ error: '管道和模板只能选择其中一个' }, { status: 400 });
     }
 
-    if (templateId !== undefined && templateId !== null) {
-      const template = await db.query.craftTemplates.findFirst({
-        where: eq(craftTemplates.id, templateId),
-      });
-      if (!template || template.userId !== userId) {
+    if ((pipelineId !== undefined && pipelineId !== null) || (templateId !== undefined && templateId !== null)) {
+      const [pipelineResult, templateResult] = await Promise.all([
+        (pipelineId !== undefined && pipelineId !== null)
+          ? db.query.pipelines.findFirst({ where: eq(pipelines.id, pipelineId) })
+          : Promise.resolve(null),
+        (templateId !== undefined && templateId !== null)
+          ? db.query.craftTemplates.findFirst({ where: eq(craftTemplates.id, templateId) })
+          : Promise.resolve(null),
+      ]);
+
+      if (pipelineId !== undefined && pipelineId !== null && (!pipelineResult || pipelineResult.userId !== userId)) {
+        return NextResponse.json({ error: '管道不存在或无权访问' }, { status: 400 });
+      }
+      if (templateId !== undefined && templateId !== null && (!templateResult || templateResult.userId !== userId)) {
         return NextResponse.json({ error: '模板不存在或无权访问' }, { status: 400 });
       }
     }
@@ -160,11 +169,13 @@ export async function PUT(request: NextRequest, context: RouteContext) {
 // DELETE /api/feeds/[id] - Delete a feed
 export async function DELETE(request: NextRequest, context: RouteContext) {
   try {
-    // Get authenticated user
-    const userId = await getAuthenticatedUser();
-    if (userId instanceof NextResponse) return userId;
-
-    const { id } = await context.params;
+    // Parallel: auth + params
+    const [userIdResult, { id }] = await Promise.all([
+      getAuthenticatedUser(),
+      context.params,
+    ]);
+    if (userIdResult instanceof NextResponse) return userIdResult;
+    const userId = userIdResult;
     const feedId = parseInt(id, 10);
 
     if (isNaN(feedId)) {

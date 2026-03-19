@@ -45,11 +45,13 @@ export async function GET() {
 // POST /api/feeds - Create a new feed
 export async function POST(request: NextRequest) {
   try {
-    // Get authenticated user
-    const userId = await getAuthenticatedUser();
-    if (userId instanceof NextResponse) return userId;
-
-    const body = await request.json();
+    // Parallel: auth + body parsing
+    const [userIdResult, body] = await Promise.all([
+      getAuthenticatedUser(),
+      request.json(),
+    ]);
+    if (userIdResult instanceof NextResponse) return userIdResult;
+    const userId = userIdResult;
     const { feedUrl, title, category, pipelineId, templateId, autoProcess } = body;
 
     if (!feedUrl || typeof feedUrl !== 'string') {
@@ -72,21 +74,28 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Validate pipeline/template ownership if provided
-    if (pipelineId) {
-      const pipeline = await db.query.pipelines.findFirst({
-        where: eq(pipelines.id, pipelineId),
-      });
-      if (!pipeline || pipeline.userId !== userId) {
-        return NextResponse.json({ error: '管道不存在或无权访问' }, { status: 400 });
-      }
+    // Validate pipeline/template ownership if provided (parallel)
+    if (pipelineId && templateId) {
+      return NextResponse.json(
+        { error: '管道和模板只能选择其中一个' },
+        { status: 400 }
+      );
     }
 
-    if (templateId) {
-      const template = await db.query.craftTemplates.findFirst({
-        where: eq(craftTemplates.id, templateId),
-      });
-      if (!template || template.userId !== userId) {
+    if (pipelineId || templateId) {
+      const [pipelineResult, templateResult] = await Promise.all([
+        pipelineId
+          ? db.query.pipelines.findFirst({ where: eq(pipelines.id, pipelineId) })
+          : Promise.resolve(null),
+        templateId
+          ? db.query.craftTemplates.findFirst({ where: eq(craftTemplates.id, templateId!) })
+          : Promise.resolve(null),
+      ]);
+
+      if (pipelineId && (!pipelineResult || pipelineResult.userId !== userId)) {
+        return NextResponse.json({ error: '管道不存在或无权访问' }, { status: 400 });
+      }
+      if (templateId && (!templateResult || templateResult.userId !== userId)) {
         return NextResponse.json({ error: '模板不存在或无权访问' }, { status: 400 });
       }
     }

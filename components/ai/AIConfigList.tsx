@@ -2,10 +2,10 @@
 
 import type { AIConfig, PresetProvider } from '@/lib/api/ai-configs';
 import { useState } from 'react';
-import { Bot, Plus, Sparkles } from 'lucide-react';
+import dynamic from 'next/dynamic';
+import { Bot, Plus } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import { AIConfigCard } from './AIConfigCard';
-import { AIConfigModal } from './AIConfigModal';
 import {
   createAIConfig,
   deleteAIConfig,
@@ -13,6 +13,12 @@ import {
   testAIConfig,
 } from '@/lib/api/ai-configs';
 import { cn } from '@/lib/utils';
+
+// Dynamic import for AIConfigModal (only loaded when needed)
+const AIConfigModal = dynamic(
+  () => import('./AIConfigModal').then((mod) => mod.AIConfigModal),
+  { ssr: false }
+);
 
 interface AIConfigListProps {
   configs: AIConfig[];

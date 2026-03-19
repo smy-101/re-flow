@@ -11,11 +11,13 @@ interface RouteContext {
 // POST /api/items/[id]/favorite - Toggle item favorite status
 export async function POST(request: NextRequest, context: RouteContext) {
   try {
-    // Get authenticated user
-    const userId = await getAuthenticatedUser();
-    if (userId instanceof NextResponse) return userId;
-
-    const { id } = await context.params;
+    // Parallel: auth + params
+    const [userIdResult, { id }] = await Promise.all([
+      getAuthenticatedUser(),
+      context.params,
+    ]);
+    if (userIdResult instanceof NextResponse) return userIdResult;
+    const userId = userIdResult;
     const itemId = parseInt(id, 10);
 
     if (isNaN(itemId)) {

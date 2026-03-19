@@ -1,18 +1,28 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useCallback } from 'react';
+import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import Button from '@/components/ui/Button';
 import FeedList from '@/components/feeds/FeedList';
-import FeedSettingsModal from '@/components/feeds/FeedSettingsModal';
-import DeleteFeedConfirm from '@/components/feeds/DeleteFeedConfirm';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
-import { fetchFeeds, updateFeed, deleteFeed as deleteFeedAPI, Feed } from '@/lib/api/feeds';
+import { useFeeds, useUpdateFeed, useDeleteFeed, type Feed } from '@/lib/hooks/swr';
+
+// Dynamic imports for modals (only loaded when needed)
+const FeedSettingsModal = dynamic(
+  () => import('@/components/feeds/FeedSettingsModal'),
+  { ssr: false }
+);
+
+const DeleteFeedConfirm = dynamic(
+  () => import('@/components/feeds/DeleteFeedConfirm'),
+  { ssr: false }
+);
 
 export default function FeedsPage() {
-  const [feeds, setFeeds] = useState<Feed[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { feeds, isLoading, isError, mutate } = useFeeds();
+  const { trigger: updateFeedTrigger } = useUpdateFeed(0);
+  const { trigger: deleteFeedTrigger } = useDeleteFeed();
 
   // Modal state
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -20,69 +30,44 @@ export default function FeedsPage() {
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [deleteFeed, setDeleteFeed] = useState<Feed | null>(null);
 
-  useEffect(() => {
-    async function loadFeeds() {
-      try {
-        setLoading(true);
-        const data = await fetchFeeds();
-        setFeeds(data);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : '加载订阅失败');
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    loadFeeds();
-  }, []);
-
-  const handleOpenSettings = (feed: Feed) => {
+  const handleOpenSettings = useCallback((feed: Feed) => {
     setSettingsFeed(feed);
     setIsSettingsOpen(true);
-  };
+  }, []);
 
-  const handleSaveSettings = async (feed: Feed) => {
+  const handleSaveSettings = useCallback(async (feed: Feed) => {
     if (!feed) return;
 
     try {
-      const updated = await updateFeed(feed.id, {
+      await updateFeedTrigger({ feedId: feed.id, data: {
         title: feed.title,
         category: feed.category || undefined,
-      });
-
-      if (updated) {
-        // Refresh feeds list to show updated data
-        const data = await fetchFeeds();
-        setFeeds(data);
-      }
+      }});
+      mutate(); // Revalidate feeds list
       setIsSettingsOpen(false);
     } catch (err) {
       console.error('Failed to save settings:', err);
     }
-  };
+  }, [updateFeedTrigger, mutate]);
 
-  const handleOpenDelete = (feed: Feed) => {
+  const handleOpenDelete = useCallback((feed: Feed) => {
     setDeleteFeed(feed);
     setIsDeleteOpen(true);
-  };
+  }, []);
 
-  const handleDelete = async () => {
+  const handleDelete = useCallback(async () => {
     if (!deleteFeed) return;
 
     try {
-      const success = await deleteFeedAPI(deleteFeed.id);
-      if (success) {
-        // Refresh feeds list to remove deleted feed
-        const data = await fetchFeeds();
-        setFeeds(data);
-      }
+      await deleteFeedTrigger(deleteFeed.id);
+      mutate(); // Revalidate feeds list
       setIsDeleteOpen(false);
     } catch (err) {
       console.error('Failed to delete feed:', err);
     }
-  };
+  }, [deleteFeed, deleteFeedTrigger, mutate]);
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex justify-center py-12">
         <LoadingSpinner size="lg" />
@@ -90,12 +75,12 @@ export default function FeedsPage() {
     );
   }
 
-  if (error) {
+  if (isError) {
     return (
       <div className="text-center py-8">
-        <p className="text-destructive mb-4">{error}</p>
+        <p className="text-destructive mb-4">加载订阅失败</p>
         <button
-          onClick={() => window.location.reload()}
+          onClick={() => mutate()}
           className="text-primary hover:underline"
         >
           重新加载
@@ -121,7 +106,7 @@ export default function FeedsPage() {
       <FeedList feeds={feeds} onOpenSettings={handleOpenSettings} />
 
       {/* Settings Modal */}
-      {isSettingsOpen && settingsFeed && (
+      {isSettingsOpen && settingsFeed ? (
         <FeedSettingsModal
           isOpen={isSettingsOpen}
           onClose={() => setIsSettingsOpen(false)}
@@ -132,17 +117,17 @@ export default function FeedsPage() {
             handleOpenDelete(settingsFeed);
           }}
         />
-      )}
+      ) : null}
 
       {/* Delete Confirmation Modal */}
-      {isDeleteOpen && deleteFeed && (
+      {isDeleteOpen && deleteFeed ? (
         <DeleteFeedConfirm
           isOpen={isDeleteOpen}
           onClose={() => setIsDeleteOpen(false)}
           onConfirm={handleDelete}
           feedTitle={deleteFeed.title}
         />
-      )}
+      ) : null}
     </div>
   );
 }

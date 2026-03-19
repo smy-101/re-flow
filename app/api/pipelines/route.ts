@@ -38,11 +38,13 @@ export async function GET() {
 // POST /api/pipelines - Create a new pipeline
 export async function POST(request: NextRequest) {
   try {
-    // Get authenticated user
-    const userId = await getAuthenticatedUser();
-    if (userId instanceof NextResponse) return userId;
-
-    const body = await request.json();
+    // Parallel: auth + body
+    const [userIdResult, body] = await Promise.all([
+      getAuthenticatedUser(),
+      request.json(),
+    ]);
+    if (userIdResult instanceof NextResponse) return userIdResult;
+    const userId = userIdResult;
     const { name, description, steps } = body;
 
     // Validate required fields

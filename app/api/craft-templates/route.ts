@@ -44,11 +44,13 @@ export async function GET() {
 // POST /api/craft-templates - Create a new craft template
 export async function POST(request: NextRequest) {
   try {
-    // Get authenticated user
-    const userId = await getAuthenticatedUser();
-    if (userId instanceof NextResponse) return userId;
-
-    const body = await request.json();
+    // Parallel: auth + body
+    const [userIdResult, body] = await Promise.all([
+      getAuthenticatedUser(),
+      request.json(),
+    ]);
+    if (userIdResult instanceof NextResponse) return userIdResult;
+    const userId = userIdResult;
     const {
       name,
       description,

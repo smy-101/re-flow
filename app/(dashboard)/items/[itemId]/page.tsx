@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { ArrowLeft, User, Clock, ExternalLink } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import { fetchItemById, fetchItems, markAsRead, FeedItem } from '@/lib/api/items';
@@ -14,11 +15,13 @@ import Badge from '@/components/ui/Badge';
 import ReadToggleButton from '@/components/items/ReadToggleButton';
 import FavoriteButton from '@/components/items/FavoriteButton';
 import ItemNavigation from '@/components/items/ItemNavigation';
-import {
-  ProcessButton,
-  ResultViewer,
-  ProcessingHistory,
-} from '@/components/processing';
+import { ProcessButton, ResultViewer } from '@/components/processing';
+
+// Dynamic import for ProcessingHistory (only loaded when needed)
+const ProcessingHistory = dynamic(
+  () => import('@/components/processing/ProcessingHistory'),
+  { ssr: false }
+);
 
 export default function ItemDetailPage() {
   const params = useParams();

@@ -11,22 +11,34 @@ interface RouteContext {
 // POST /api/feeds/[id]/mark-all-read - Mark all unread items in a feed as read
 export async function POST(request: NextRequest, context: RouteContext) {
   try {
-    // Get authenticated user
-    const userId = await getAuthenticatedUser();
-    if (userId instanceof NextResponse) return userId;
+    // Parallel: auth + params
+    const [userIdResult, { id }] = await Promise.all([
+      getAuthenticatedUser(),
+      context.params,
+    ]);
+    if (userIdResult instanceof NextResponse) return userIdResult;
+    const userId = userIdResult;
 
-    const { id } = await context.params;
     const feedId = parseInt(id, 10);
 
     if (isNaN(feedId)) {
       return NextResponse.json({ error: 'Invalid feed ID' }, { status: 400 });
     }
 
-    // Verify feed belongs to user
-    const feed = await db.query.feeds.findFirst({
-      where: eq(feeds.id, feedId),
-      columns: { id: true, userId: true },
-    });
+    // Verify feed belongs to user and get unread items in parallel
+    const [feed, unreadItems] = await Promise.all([
+      db.query.feeds.findFirst({
+        where: eq(feeds.id, feedId),
+        columns: { id: true, userId: true },
+      }),
+      db.query.feedItems.findMany({
+        where: and(
+          eq(feedItems.feedId, feedId),
+          eq(feedItems.isRead, false),
+        ),
+        columns: { id: true },
+      }),
+    ]);
 
     if (!feed) {
       return NextResponse.json({ error: 'Feed not found' }, { status: 404 });
@@ -35,15 +47,6 @@ export async function POST(request: NextRequest, context: RouteContext) {
     if (feed.userId !== userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
-
-    // Find all unread items for this feed
-    const unreadItems = await db.query.feedItems.findMany({
-      where: and(
-        eq(feedItems.feedId, feedId),
-        eq(feedItems.isRead, false),
-      ),
-      columns: { id: true },
-    });
 
     if (unreadItems.length === 0) {
       return NextResponse.json({ success: true, count: 0 });

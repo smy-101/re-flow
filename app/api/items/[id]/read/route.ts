@@ -11,18 +11,21 @@ interface RouteContext {
 // PATCH /api/items/[id]/read - Mark item as read/unread
 export async function PATCH(request: NextRequest, context: RouteContext) {
   try {
-    // Get authenticated user
-    const userId = await getAuthenticatedUser();
-    if (userId instanceof NextResponse) return userId;
+    // Parallel: auth + params + body
+    const [userIdResult, { id }, body] = await Promise.all([
+      getAuthenticatedUser(),
+      context.params,
+      request.json(),
+    ]);
+    if (userIdResult instanceof NextResponse) return userIdResult;
+    const userId = userIdResult;
 
-    const { id } = await context.params;
     const itemId = parseInt(id, 10);
 
     if (isNaN(itemId)) {
       return NextResponse.json({ error: 'Invalid item ID' }, { status: 400 });
     }
 
-    const body = await request.json();
     const { isRead } = body;
 
     if (typeof isRead !== 'boolean') {

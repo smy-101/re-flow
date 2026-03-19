@@ -43,8 +43,8 @@ export function AIConfigForm({
   const [apiKey, setApiKey] = useState('');
   const [model, setModel] = useState(config?.model || '');
   const [systemPrompt, setSystemPrompt] = useState(config?.systemPrompt || '');
-  const [modelParams, setModelParams] = useState({});
-  const [extraParams, setExtraParams] = useState({});
+  const [modelParams, setModelParams] = useState<ModelParams | undefined>(() => undefined);
+  const [extraParams, setExtraParams] = useState<Record<string, unknown>>(() => ({}));
 
   const selectedProvider = presets.find((p) => p.id === providerId);
   const apiFormat: ApiFormat = selectedProvider?.apiFormat || 'openai';

@@ -1,7 +1,7 @@
 'use client';
 
 import type { AIConfig, PresetProvider } from '@/lib/api/ai-configs';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, memo } from 'react';
 import { MoreVertical, Bot, Sparkles, Check, X } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import { formatDateTimestamp } from '@/lib/time/timestamp';
@@ -21,7 +21,7 @@ interface AIConfigCardProps {
   testResult?: { success: boolean; error?: string; latency?: number } | null;
 }
 
-export function AIConfigCard({
+export const AIConfigCard = memo(function AIConfigCard({
   config,
   presets,
   onEdit,
@@ -305,4 +305,4 @@ export function AIConfigCard({
       `}</style>
     </div>
   );
-}
+});

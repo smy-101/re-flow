@@ -144,7 +144,7 @@ export default function FeedAutoProcessSettings({
         </span>
       </div>
 
-      {autoProcess && (
+      {autoProcess ? (
         <div className="space-y-4 pl-4 border-l-2 border-gray-200">
           {/* Processing Type Selection */}
           <div>
@@ -178,7 +178,7 @@ export default function FeedAutoProcessSettings({
           </div>
 
           {/* Pipeline Selection */}
-          {processingType === 'pipeline' && (
+          {processingType === 'pipeline' ? (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 选择管道
@@ -202,10 +202,10 @@ export default function FeedAutoProcessSettings({
                 </select>
               )}
             </div>
-          )}
+          ) : null}
 
           {/* Template Selection */}
-          {processingType === 'template' && (
+          {processingType === 'template' ? (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 选择模板
@@ -229,28 +229,28 @@ export default function FeedAutoProcessSettings({
                 </select>
               )}
             </div>
-          )}
+          ) : null}
 
           {/* Info text */}
           <p className="text-xs text-gray-500">
             启用后，该订阅的新文章将自动加入处理队列
           </p>
         </div>
-      )}
+      ) : null}
 
       {/* Error Message */}
-      {error && (
+      {error ? (
         <div className="p-3 rounded-lg bg-red-50 text-red-700 text-sm">
           {error}
         </div>
-      )}
+      ) : null}
 
       {/* Success Message */}
-      {success && (
+      {success ? (
         <div className="p-3 rounded-lg bg-green-50 text-green-700 text-sm">
           配置已保存
         </div>
-      )}
+      ) : null}
 
       {/* Save Button */}
       <div className="flex justify-end">

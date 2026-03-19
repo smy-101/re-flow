@@ -39,11 +39,13 @@ export async function GET() {
 // POST /api/ai-configs - Create a new AI config
 export async function POST(request: NextRequest) {
   try {
-    // Get authenticated user
-    const userId = await getAuthenticatedUser();
-    if (userId instanceof NextResponse) return userId;
-
-    const body = await request.json();
+    // Parallel: auth + body
+    const [userIdResult, body] = await Promise.all([
+      getAuthenticatedUser(),
+      request.json(),
+    ]);
+    if (userIdResult instanceof NextResponse) return userIdResult;
+    const userId = userIdResult;
     const {
       name,
       providerType,

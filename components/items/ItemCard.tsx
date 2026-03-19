@@ -1,5 +1,6 @@
 'use client';
 
+import { memo } from 'react';
 import Link from 'next/link';
 import { Clock3, UserRound, Bookmark } from 'lucide-react';
 import Badge from '@/components/ui/Badge';
@@ -13,24 +14,25 @@ interface ItemCardProps {
   feedTitle?: string;
 }
 
-export default function ItemCard({ item, feedTitle }: ItemCardProps) {
-  const formatDate = (timestamp: number) => {
-    const date = new Date(timestamp * 1000);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+// Extract formatDate to module scope to avoid recreation
+function formatDate(timestamp: number): string {
+  const date = new Date(timestamp * 1000);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
-    if (diffDays === 0) {
-      return '今天';
-    } else if (diffDays === 1) {
-      return '昨天';
-    } else if (diffDays < 7) {
-      return `${diffDays} 天前`;
-    } else {
-      return date.toLocaleDateString('zh-CN');
-    }
-  };
+  if (diffDays === 0) {
+    return '今天';
+  } else if (diffDays === 1) {
+    return '昨天';
+  } else if (diffDays < 7) {
+    return `${diffDays} 天前`;
+  } else {
+    return date.toLocaleDateString('zh-CN');
+  }
+}
 
+const ItemCard = memo(function ItemCard({ item, feedTitle }: ItemCardProps) {
   return (
     <article
       className={cn(
@@ -47,9 +49,9 @@ export default function ItemCard({ item, feedTitle }: ItemCardProps) {
       <div className="pointer-events-none absolute inset-0 z-0">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/3 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
         {/* Unread indicator glow */}
-        {!item.isRead && (
+        {!item.isRead ? (
           <div className="absolute left-0 top-1/2 h-16 w-20 -translate-y-1/2 bg-success/10 blur-2xl" />
-        )}
+        ) : null}
       </div>
 
       {/* Content */}
@@ -136,4 +138,6 @@ export default function ItemCard({ item, feedTitle }: ItemCardProps) {
       </div>
     </article>
   );
-}
+});
+
+export default ItemCard;

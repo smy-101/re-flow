@@ -1,5 +1,6 @@
 'use client';
 
+import { memo, useCallback } from 'react';
 import Link from 'next/link';
 import { useState } from 'react';
 import { EllipsisVertical, RefreshCw, Rss } from 'lucide-react';
@@ -16,11 +17,11 @@ interface FeedCardProps {
   onOpenSettings?: (feed: Feed) => void;
 }
 
-export default function FeedCard({ feed, onRefresh, onOpenSettings }: FeedCardProps) {
+const FeedCard = memo(function FeedCard({ feed, onRefresh, onOpenSettings }: FeedCardProps) {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleRefresh = async (e: React.MouseEvent) => {
+  const handleRefresh = useCallback(async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
 
@@ -50,7 +51,7 @@ export default function FeedCard({ feed, onRefresh, onOpenSettings }: FeedCardPr
     } finally {
       setIsRefreshing(false);
     }
-  };
+  }, [feed.id, onRefresh]);
 
   return (
     <div
@@ -176,4 +177,6 @@ export default function FeedCard({ feed, onRefresh, onOpenSettings }: FeedCardPr
       </div>
     </div>
   );
-}
+});
+
+export default FeedCard;

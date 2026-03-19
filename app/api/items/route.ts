@@ -7,11 +7,16 @@ import { getAuthenticatedUser } from '@/lib/auth/auth-helper';
 // GET /api/items - List items with optional filters
 export async function GET(request: NextRequest) {
   try {
-    // Get authenticated user
-    const userId = await getAuthenticatedUser();
-    if (userId instanceof NextResponse) return userId;
+    // Parallel: auth + URL parsing
+    const url = new URL(request.url);
+    const [userIdResult] = await Promise.all([
+      getAuthenticatedUser(),
+      Promise.resolve(url), // URL parsing is sync but we include it for pattern consistency
+    ]);
+    if (userIdResult instanceof NextResponse) return userIdResult;
+    const userId = userIdResult;
 
-    const { searchParams } = new URL(request.url);
+    const { searchParams } = url;
     const feedId = searchParams.get('feedId');
     const isRead = searchParams.get('isRead');
     const isFavorite = searchParams.get('isFavorite');
