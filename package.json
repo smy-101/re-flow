@@ -10,7 +10,8 @@
     "test": "vitest --run",
     "worker:mcp": "tsx workers/remote-rss-mcp.ts",
     "worker:rss": "tsx workers/rss-worker.ts",
-    "worker:processing": "tsx workers/processing-worker.ts"
+    "worker:processing": "tsx workers/processing-worker.ts",
+    "worker:digest": "tsx workers/digest-worker.ts"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.58",
@@ -29,6 +30,8 @@
     "better-sqlite3": "^12.6.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "date-fns": "^4.1.0",
+    "date-fns-tz": "^3.2.0",
     "dotenv": "^17.3.1",
     "drizzle-orm": "^0.45.1",
     "jose": "^6.1.3",

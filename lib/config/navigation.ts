@@ -1,6 +1,6 @@
-import { type LucideIcon, Folder, BookOpen, Pin, Settings, FileText, GitBranch, ArrowRightLeft, KeyRound } from 'lucide-react';
+import { type LucideIcon, Folder, BookOpen, Pin, Settings, FileText, GitBranch, ArrowRightLeft, KeyRound, Mail } from 'lucide-react';
 
-export type NavigationItemId = 'feeds' | 'items' | 'favorites' | 'ai' | 'craft' | 'pipelines' | 'mcp' | 'relay';
+export type NavigationItemId = 'feeds' | 'items' | 'favorites' | 'ai' | 'craft' | 'pipelines' | 'mcp' | 'digest' | 'relay';
 
 export interface NavigationItem {
   id: NavigationItemId;
@@ -53,6 +53,12 @@ export const navigationItems: NavigationItem[] = [
     label: 'MCP Tokens',
     href: '/settings/mcp',
     icon: KeyRound,
+  },
+  {
+    id: 'digest',
+    label: '邮件推送',
+    href: '/settings/digest',
+    icon: Mail,
   },
   {
     id: 'relay',

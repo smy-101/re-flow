@@ -343,6 +343,98 @@ export const processingQueue = sqliteTable(
 export type ProcessingQueue = typeof processingQueue.$inferSelect;
 export type NewProcessingQueue = typeof processingQueue.$inferInsert;
 
+// Email Digest Tables
+export const emailDigestConfigs = sqliteTable(
+  'email_digest_configs',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    userId: integer('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    enabled: integer('enabled', { mode: 'boolean' }).notNull().default(false),
+    frequency: text('frequency').notNull().default('daily'), // 'daily' | 'weekly' | 'custom'
+    customDays: integer('custom_days'), // 1-30, only used when frequency='custom'
+    sendTime: text('send_time').notNull().default('08:00'), // HH:mm format
+    timezone: text('timezone').notNull().default('UTC'), // IANA timezone
+    markAsRead: integer('mark_as_read', { mode: 'boolean' })
+      .notNull()
+      .default(false),
+    pausedDueToFailures: integer('paused_due_to_failures', { mode: 'boolean' })
+      .notNull()
+      .default(false),
+    consecutiveFailures: integer('consecutive_failures').notNull().default(0),
+    lastSentAt: integer('last_sent_at'),
+    nextSendAt: integer('next_send_at'),
+    createdAt: integer('created_at')
+      .notNull()
+      .default(sql`(strftime('%s', 'now'))`),
+    updatedAt: integer('updated_at')
+      .notNull()
+      .default(sql`(strftime('%s', 'now'))`),
+  },
+  (table) => ({
+    userIdIdx: index('email_digest_configs_user_id_idx').on(table.userId),
+    enabledIdx: index('email_digest_configs_enabled_idx').on(table.enabled),
+    nextSendAtIdx: index('email_digest_configs_next_send_at_idx').on(
+      table.nextSendAt,
+    ),
+  }),
+);
+
+export type EmailDigestConfig = typeof emailDigestConfigs.$inferSelect;
+export type NewEmailDigestConfig = typeof emailDigestConfigs.$inferInsert;
+
+export const emailDigestFilters = sqliteTable(
+  'email_digest_filters',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    configId: integer('config_id')
+      .notNull()
+      .references(() => emailDigestConfigs.id, { onDelete: 'cascade' }),
+    filterType: text('filter_type').notNull(), // 'all' | 'category' | 'feed'
+    filterValue: text('filter_value'), // category name or feed id
+    createdAt: integer('created_at')
+      .notNull()
+      .default(sql`(strftime('%s', 'now'))`),
+  },
+  (table) => ({
+    configIdIdx: index('email_digest_filters_config_id_idx').on(table.configId),
+    filterTypeIdx: index('email_digest_filters_filter_type_idx').on(
+      table.filterType,
+    ),
+  }),
+);
+
+export type EmailDigestFilter = typeof emailDigestFilters.$inferSelect;
+export type NewEmailDigestFilter = typeof emailDigestFilters.$inferInsert;
+
+export const emailDigestLogs = sqliteTable(
+  'email_digest_logs',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    configId: integer('config_id')
+      .notNull()
+      .references(() => emailDigestConfigs.id, { onDelete: 'cascade' }),
+    userId: integer('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    sentAt: integer('sent_at')
+      .notNull()
+      .default(sql`(strftime('%s', 'now'))`),
+    success: integer('success', { mode: 'boolean' }).notNull(),
+    itemCount: integer('item_count').notNull().default(0),
+    errorMessage: text('error_message'),
+  },
+  (table) => ({
+    configIdIdx: index('email_digest_logs_config_id_idx').on(table.configId),
+    userIdIdx: index('email_digest_logs_user_id_idx').on(table.userId),
+    sentAtIdx: index('email_digest_logs_sent_at_idx').on(table.sentAt),
+  }),
+);
+
+export type EmailDigestLog = typeof emailDigestLogs.$inferSelect;
+export type NewEmailDigestLog = typeof emailDigestLogs.$inferInsert;
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   feeds: many(feeds),
@@ -353,6 +445,8 @@ export const usersRelations = relations(users, ({ many }) => ({
   pipelines: many(pipelines),
   processingResults: many(processingResults),
   processingQueue: many(processingQueue),
+  emailDigestConfigs: many(emailDigestConfigs),
+  emailDigestLogs: many(emailDigestLogs),
 }));
 
 export const feedsRelations = relations(feeds, ({ one, many }) => ({
@@ -457,6 +551,42 @@ export const processingQueueRelations = relations(
     template: one(craftTemplates, {
       fields: [processingQueue.templateId],
       references: [craftTemplates.id],
+    }),
+  }),
+);
+
+export const emailDigestConfigsRelations = relations(
+  emailDigestConfigs,
+  ({ one, many }) => ({
+    user: one(users, {
+      fields: [emailDigestConfigs.userId],
+      references: [users.id],
+    }),
+    filters: many(emailDigestFilters),
+    logs: many(emailDigestLogs),
+  }),
+);
+
+export const emailDigestFiltersRelations = relations(
+  emailDigestFilters,
+  ({ one }) => ({
+    config: one(emailDigestConfigs, {
+      fields: [emailDigestFilters.configId],
+      references: [emailDigestConfigs.id],
+    }),
+  }),
+);
+
+export const emailDigestLogsRelations = relations(
+  emailDigestLogs,
+  ({ one }) => ({
+    config: one(emailDigestConfigs, {
+      fields: [emailDigestLogs.configId],
+      references: [emailDigestConfigs.id],
+    }),
+    user: one(users, {
+      fields: [emailDigestLogs.userId],
+      references: [users.id],
     }),
   }),
 );

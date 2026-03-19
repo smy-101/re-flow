@@ -81,3 +81,36 @@ export async function sendVerificationEmail(
 
   return { success: true, messageId: info.messageId };
 }
+
+export interface SendEmailOptions {
+  to: string;
+  subject: string;
+  html: string;
+  text?: string;
+}
+
+/**
+ * Send a generic email
+ */
+export async function sendEmail(options: SendEmailOptions): Promise<{ success: boolean; messageId?: string }> {
+  if (!isEmailConfigured()) {
+    throw new Error('Email service is not configured');
+  }
+
+  const config = getEmailConfig();
+  if (!config) {
+    throw new Error('SMTP configuration is missing');
+  }
+
+  const transporter = createTransporter();
+
+  const info = await transporter.sendMail({
+    from: config.from,
+    to: options.to,
+    subject: options.subject,
+    html: options.html,
+    text: options.text,
+  });
+
+  return { success: true, messageId: info.messageId };
+}

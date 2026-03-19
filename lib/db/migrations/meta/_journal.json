@@ -15,6 +15,13 @@
       "when": 1773112600000,
       "tag": "0001_moaning_mimic",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1773882959268,
+      "tag": "0002_lonely_mikhail_rasputin",
+      "breakpoints": true
     }
   ]
 }
