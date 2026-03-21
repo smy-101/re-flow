@@ -21,6 +21,12 @@ import {
   sendDigestEmail,
   updateConfigAfterSend,
 } from './sender';
+import {
+  refreshFeedsForDigest,
+} from './refresher';
+import {
+  processArticlesForDigest,
+} from './ai-processor';
 
 /**
  * Interval between processing users (ms)
@@ -157,11 +163,28 @@ async function processDigestConfig(config: typeof emailDigestConfigs.$inferSelec
       return { success: false, itemCount: 0, error: 'User email not verified' };
     }
 
-    // Query unread items
+    // Step 1: Refresh RSS feeds based on digest filter
+    console.log(`  Refreshing RSS feeds for config ${configId}...`);
+    const refreshResult = await refreshFeedsForDigest(userId, configId);
+    console.log(`  RSS refresh complete: ${refreshResult.feedsProcessed} processed, ${refreshResult.totalItemsAdded} items added`);
+
+    // Step 2: Query unread items after refresh
     let items = await queryUnreadItems(userId, typedFrequency, customDays);
 
     // Apply filters
     items = await applyFilters(items, configId);
+
+    // Step 3: Process articles with AI (for items that need it)
+    if (items.length > 0) {
+      const itemIds = items.map((item) => item.id);
+      console.log(`  Processing ${itemIds.length} articles with AI...`);
+      const aiResult = await processArticlesForDigest(userId, itemIds);
+      console.log(`  AI processing complete: ${aiResult.articlesProcessed} processed`);
+
+      // Re-query items to get updated AI results
+      items = await queryUnreadItems(userId, typedFrequency, customDays);
+      items = await applyFilters(items, configId);
+    }
 
     // Calculate next send time (regardless of whether we send)
     const nextSendAt = calculateNextSendAt({

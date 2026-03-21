@@ -9,8 +9,6 @@
     "lint": "eslint",
     "test": "vitest --run",
     "worker:mcp": "tsx workers/remote-rss-mcp.ts",
-    "worker:rss": "tsx workers/rss-worker.ts",
-    "worker:processing": "tsx workers/processing-worker.ts",
     "worker:digest": "tsx workers/digest-worker.ts"
   },
   "dependencies": {

@@ -1,8 +1,13 @@
 /**
  * Digest Worker Entry Point
  *
- * This worker runs the email digest scheduler, checking every 5 minutes
- * for due digests and sending them to users.
+ * This unified worker handles:
+ * - Email digest scheduling and sending
+ * - RSS feed refresh before sending digests
+ * - AI processing of articles before sending
+ *
+ * Previously, these were separate workers (rss-worker, processing-worker, digest-worker).
+ * Now they are consolidated for efficiency.
  *
  * Usage: pnpm worker:digest
  */
